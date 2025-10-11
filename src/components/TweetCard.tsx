@@ -1,0 +1,170 @@
+import React from 'react';
+import { View, Text, TouchableOpacity, Linking } from 'react-native';
+import { SmartImage } from './SmartImage';
+import { formatDate, formatLikeCount } from '../utils/format';
+import { Tweet } from '../types';
+
+interface TweetCardProps {
+  tweet: Tweet;
+  onPress?: (tweet: Tweet) => void;
+  showStats?: boolean;
+}
+
+export const TweetCard: React.FC<TweetCardProps> = ({
+  tweet,
+  onPress,
+  showStats = true,
+}) => {
+  const handleExternalLink = async () => {
+    if (await Linking.canOpenURL(tweet.url)) {
+      await Linking.openURL(tweet.url);
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={() => onPress?.(tweet)}
+      className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-3"
+      activeOpacity={0.8}
+    >
+      {/* User info */}
+      <View className="flex-row items-center mb-3">
+        <SmartImage
+          uri={tweet.user.avatar}
+          className="w-10 h-10 rounded-full mr-3"
+          resizeMode="cover"
+        />
+        
+        <View className="flex-1">
+          <View className="flex-row items-center">
+            <Text className="text-gray-900 dark:text-gray-100 font-semibold mr-2">
+              {tweet.user.name}
+            </Text>
+            {tweet.user.verified && (
+              <Text className="text-blue-500">✓</Text>
+            )}
+          </View>
+          
+          <Text className="text-gray-500 dark:text-gray-400 text-sm">
+            @{tweet.user.handle}
+          </Text>
+        </View>
+        
+        <TouchableOpacity
+          onPress={handleExternalLink}
+          className="bg-gray-100 dark:bg-gray-700 p-2 rounded-full"
+          activeOpacity={0.8}
+        >
+          <Text className="text-gray-600 dark:text-gray-300">🔗</Text>
+        </TouchableOpacity>
+      </View>
+      
+      {/* Tweet content */}
+      <Text className="text-gray-900 dark:text-gray-100 text-base leading-6 mb-3">
+        {tweet.text}
+      </Text>
+      
+      {/* Stats */}
+      {showStats && (
+        <View className="flex-row items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
+          <Text className="text-gray-500 dark:text-gray-400 text-sm">
+            {formatDate(tweet.createdAt)}
+          </Text>
+          
+          <View className="flex-row items-center space-x-4">
+            {tweet.likes && (
+              <View className="flex-row items-center">
+                <Text className="text-gray-500 dark:text-gray-400 text-sm mr-1">
+                  ❤️
+                </Text>
+                <Text className="text-gray-500 dark:text-gray-400 text-sm">
+                  {formatLikeCount(tweet.likes)}
+                </Text>
+              </View>
+            )}
+            
+            {tweet.retweets && (
+              <View className="flex-row items-center">
+                <Text className="text-gray-500 dark:text-gray-400 text-sm mr-1">
+                  🔄
+                </Text>
+                <Text className="text-gray-500 dark:text-gray-400 text-sm">
+                  {formatLikeCount(tweet.retweets)}
+                </Text>
+              </View>
+            )}
+            
+            {tweet.replies && (
+              <View className="flex-row items-center">
+                <Text className="text-gray-500 dark:text-gray-400 text-sm mr-1">
+                  💬
+                </Text>
+                <Text className="text-gray-500 dark:text-gray-400 text-sm">
+                  {formatLikeCount(tweet.replies)}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+};
+
+interface CompactTweetCardProps {
+  tweet: Tweet;
+  onPress?: (tweet: Tweet) => void;
+}
+
+export const CompactTweetCard: React.FC<CompactTweetCardProps> = ({
+  tweet,
+  onPress,
+}) => {
+  const handleExternalLink = async () => {
+    if (await Linking.canOpenURL(tweet.url)) {
+      await Linking.openURL(tweet.url);
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={() => onPress?.(tweet)}
+      className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 mb-2"
+      activeOpacity={0.8}
+    >
+      <View className="flex-row items-center">
+        <SmartImage
+          uri={tweet.user.avatar}
+          className="w-8 h-8 rounded-full mr-3"
+          resizeMode="cover"
+        />
+        
+        <View className="flex-1">
+          <Text className="text-gray-900 dark:text-gray-100 font-medium mb-1">
+            {tweet.user.name}
+          </Text>
+          <Text 
+            className="text-gray-600 dark:text-gray-400 text-sm leading-5"
+            numberOfLines={2}
+          >
+            {tweet.text}
+          </Text>
+          <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+            {formatDate(tweet.createdAt)}
+          </Text>
+        </View>
+        
+        <TouchableOpacity
+          onPress={handleExternalLink}
+          className="bg-gray-100 dark:bg-gray-700 p-1.5 rounded-full ml-2"
+          activeOpacity={0.8}
+        >
+          <Text className="text-gray-600 dark:text-gray-300 text-xs">🔗</Text>
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
+  );
+};
+
+
+
