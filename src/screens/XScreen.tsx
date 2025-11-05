@@ -1,6 +1,7 @@
 import React from 'react';
 import { FlatList, RefreshControl, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useHeaderHeight } from '@react-navigation/elements';
 
 import { Loading, ListSkeleton } from '../components/Loading';
 import { ErrorView } from '../components/ErrorView';
@@ -20,6 +21,7 @@ const XScreen: React.FC = () => {
     isFetchingNextPage,
   } = useTweets();
   const { colors } = useTheme();
+  const headerHeight = useHeaderHeight();
 
   const handleRefresh = () => {
     refetch();
@@ -87,26 +89,26 @@ const XScreen: React.FC = () => {
   const tweets = data?.pages.flatMap(page => page.data) || [];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>X (Twitter)</Text>
-        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-          Latest crypto tweets and updates
-        </Text>
-      </View>
-
+    <SafeAreaView edges={['left','right','bottom']} style={[styles.container, { backgroundColor: colors.background }]}> 
       <FlatList
         data={tweets}
         renderItem={renderTweet}
         keyExtractor={(item) => item.id}
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} colors={[colors.primary]} tintColor={colors.primary} />
+          <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} colors={[colors.primary]} tintColor={colors.primary} progressViewOffset={headerHeight} />
         }
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
+        ListHeaderComponent={
+          <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}> 
+            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>X (Twitter)</Text>
+            <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}> 
+              Latest crypto tweets and updates
+            </Text>
+          </View>
+        }
         contentContainerStyle={[styles.listContent, tweets.length === 0 && styles.emptyListContent]}
         showsVerticalScrollIndicator={false}
       />

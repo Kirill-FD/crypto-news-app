@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FlatList, RefreshControl, View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useHeaderHeight } from '@react-navigation/elements';
 
 import { Loading, ListSkeleton } from '../components/Loading';
 import { ErrorView } from '../components/ErrorView';
@@ -14,6 +15,7 @@ const RSSScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const { colors } = useTheme();
+  const headerHeight = useHeaderHeight();
 
   const {
     data: allNewsData,
@@ -121,49 +123,49 @@ const RSSScreen: React.FC = () => {
   const isLoading = isSearching ? searchLoading : allNewsLoading;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>RSS News</Text>
-        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-          Latest cryptocurrency news and updates
-        </Text>
-
-        {/* Search Bar */}
-        <View style={[styles.searchContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
-          <Text style={[styles.searchIcon, { color: colors.textSecondary }]}>🔍</Text>
-          <TextInput
-            placeholder="Search news..."
-            placeholderTextColor={colors.textSecondary}
-            style={[styles.searchInput, { color: colors.textPrimary }]}
-            onChangeText={handleSearchChange}
-            defaultValue={searchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity
-              onPress={() => {
-                setSearchQuery('');
-                setIsSearching(false);
-              }}
-              style={styles.clearButton}
-            >
-              <Text style={{ color: colors.textSecondary }}>✕</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
+    <SafeAreaView edges={['left','right','bottom']} style={[styles.container, { backgroundColor: colors.background }]}> 
       <FlatList
         data={news}
         renderItem={renderNews}
         keyExtractor={(item) => item.id}
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} colors={[colors.primary]} tintColor={colors.primary} />
+          <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} colors={[colors.primary]} tintColor={colors.primary} progressViewOffset={headerHeight} />
         }
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
+        ListHeaderComponent={
+          <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}> 
+            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>RSS News</Text>
+            <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}> 
+              Latest cryptocurrency news and updates
+            </Text>
+
+            {/* Search Bar */}
+            <View style={[styles.searchContainer, { backgroundColor: colors.background, borderColor: colors.border }]}> 
+              <Text style={[styles.searchIcon, { color: colors.textSecondary }]}>🔍</Text>
+              <TextInput
+                placeholder="Search news..."
+                placeholderTextColor={colors.textSecondary}
+                style={[styles.searchInput, { color: colors.textPrimary }]}
+                onChangeText={handleSearchChange}
+                defaultValue={searchQuery}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setSearchQuery('');
+                    setIsSearching(false);
+                  }}
+                  style={styles.clearButton}
+                >
+                  <Text style={{ color: colors.textSecondary }}>✕</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        }
         contentContainerStyle={[styles.listContent, news.length === 0 && styles.emptyListContent]}
         showsVerticalScrollIndicator={false}
       />

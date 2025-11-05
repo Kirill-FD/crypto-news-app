@@ -61,7 +61,7 @@ export const useNewsByCategory = (category: string, limit: number = 20) => {
     getNextPageParam: (lastPage: PaginatedResponse<News>) => {
       return lastPage.hasMore ? lastPage.page + 1 : undefined;
     },
-    initialPageParam: 1,
+    initialPageParam: null as string | null,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnMount: false,
     refetchOnWindowFocus: false,

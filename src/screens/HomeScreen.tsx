@@ -3,6 +3,7 @@ import { ScrollView, RefreshControl, View, Text, TouchableOpacity } from 'react-
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useHeaderHeight } from '@react-navigation/elements';
 
 import { Loading } from '../components/Loading';
 import { ErrorView } from '../components/ErrorView';
@@ -19,6 +20,7 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const { colors } = useTheme();
+  const headerHeight = useHeaderHeight();
 
   const {
     data: latestVideo,
@@ -77,7 +79,7 @@ const HomeScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['left','right','bottom']} style={[styles.container, { backgroundColor: colors.background }]}> 
       <ScrollView
         style={styles.scrollView}
         refreshControl={
@@ -86,17 +88,18 @@ const HomeScreen: React.FC = () => {
             onRefresh={handleRefresh}
             colors={[colors.primary]}
             tintColor={colors.primary}
+            progressViewOffset={headerHeight}
           />
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
+        {/* Header
         <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Crypto News</Text>
           <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
             Stay updated with the latest in cryptocurrency
           </Text>
-        </View>
+        </View> */}
 
         <View style={styles.content}>
           {/* Latest Video Section */}
