@@ -2,12 +2,17 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { Video, Tweet, News, ApiResponse, PaginatedResponse } from '../types';
 import { mockVideos, mockTweets, mockNews } from '../mocks';
 
-// Force using mock data to avoid any real API requests
-const useMockData = true;
+// Determine mock mode from Expo public env var; default to real API
+const useMockData = (process.env.EXPO_PUBLIC_USE_MOCK === '1' || process.env.EXPO_PUBLIC_USE_MOCK === 'true') ?? false;
+
+// Resolve API base URL: allow override via env, fallback to deployed Cloud Run URL
+const resolvedBaseUrl = useMockData
+  ? 'http://localhost:3000'
+  : (process.env.EXPO_PUBLIC_API_BASE || 'https://crypto-app-service-865815497825.europe-west1.run.app');
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
-  baseURL: useMockData ? 'http://localhost:3000' : 'https://api.cryptonews.com',
+  baseURL: resolvedBaseUrl,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -135,11 +140,28 @@ class ApiService {
         hasMore: endIndex < mockNews.length,
       };
     }
-    
-    const response: AxiosResponse<ApiResponse<PaginatedResponse<News>>> = await apiClient.get(
-      `/news/latest?page=${page}&limit=${limit}`
-    );
-    return response.data.data;
+
+    // Real API: root returns { message, timestamp }
+    const response: AxiosResponse<{ message: string; timestamp: string }> = await apiClient.get('/');
+    const statusNews: News = {
+      id: `status-${response.data.timestamp}`,
+      title: response.data.message,
+      image: '',
+      summary: response.data.message,
+      content: response.data.message,
+      publishedAt: response.data.timestamp,
+      sourceUrl: resolvedBaseUrl,
+      source: 'Crypto App Admin API',
+      category: 'status',
+    };
+
+    return {
+      data: [statusNews],
+      page: 1,
+      limit,
+      total: 1,
+      hasMore: false,
+    };
   }
 
   async getAllNews(page: number = 1, limit: number = 20): Promise<PaginatedResponse<News>> {
@@ -162,11 +184,28 @@ class ApiService {
         hasMore: endIndex < mockNews.length,
       };
     }
-    
-    const response: AxiosResponse<ApiResponse<PaginatedResponse<News>>> = await apiClient.get(
-      `/news?page=${page}&limit=${limit}`
-    );
-    return response.data.data;
+
+    // Real API: root returns service status; adapt it into one-news list
+    const response: AxiosResponse<{ message: string; timestamp: string }> = await apiClient.get('/');
+    const statusNews: News = {
+      id: `status-${response.data.timestamp}`,
+      title: response.data.message,
+      image: '',
+      summary: response.data.message,
+      content: response.data.message,
+      publishedAt: response.data.timestamp,
+      sourceUrl: resolvedBaseUrl,
+      source: 'Crypto App Admin API',
+      category: 'status',
+    };
+
+    return {
+      data: [statusNews],
+      page: 1,
+      limit,
+      total: 1,
+      hasMore: false,
+    };
   }
 
   async searchNews(query: string, page: number = 1, limit: number = 20): Promise<PaginatedResponse<News>> {
@@ -195,11 +234,29 @@ class ApiService {
         hasMore: endIndex < filteredNews.length,
       };
     }
-    
-    const response: AxiosResponse<ApiResponse<PaginatedResponse<News>>> = await apiClient.get(
-      `/news/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`
-    );
-    return response.data.data;
+
+    // Real API: search over the status payload
+    const response: AxiosResponse<{ message: string; timestamp: string }> = await apiClient.get('/');
+    const matches = response.data.message.toLowerCase().includes(query.toLowerCase());
+    const statusNews: News = {
+      id: `status-${response.data.timestamp}`,
+      title: response.data.message,
+      image: '',
+      summary: response.data.message,
+      content: response.data.message,
+      publishedAt: response.data.timestamp,
+      sourceUrl: resolvedBaseUrl,
+      source: 'Crypto App Admin API',
+      category: 'status',
+    };
+
+    return {
+      data: matches && query.length > 0 ? [statusNews] : [],
+      page: 1,
+      limit,
+      total: matches && query.length > 0 ? 1 : 0,
+      hasMore: false,
+    };
   }
 }
 

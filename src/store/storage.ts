@@ -1,12 +1,35 @@
 import { MMKV } from 'react-native-mmkv';
 import { Platform } from 'react-native';
 
-// Initialize MMKV storage
-export const storage = new MMKV(
-  Platform.OS === 'web'
-    ? { id: 'crypto-news-storage' }
-    : { id: 'crypto-news-storage', encryptionKey: 'crypto-news-encryption-key-2024' }
-);
+type StorageLike = {
+	set: (key: string, value: string) => void;
+	getString: (key: string) => string | undefined;
+	delete: (key: string) => void;
+	clearAll: () => void;
+};
+
+class MemoryStorage implements StorageLike {
+	private map = new Map<string, string>();
+	set(key: string, value: string) { this.map.set(key, value); }
+	getString(key: string) { return this.map.get(key); }
+	delete(key: string) { this.map.delete(key); }
+	clearAll() { this.map.clear(); }
+}
+
+// Initialize storage with a safe fallback if MMKV cannot start (e.g., remote debugging)
+const createStorage = (): StorageLike => {
+	if (Platform.OS === 'web') {
+		return new MemoryStorage();
+	}
+	try {
+		return new MMKV({ id: 'crypto-news-storage', encryptionKey: 'crypto-news-encryption-key-2024' });
+	} catch (e) {
+		// Fallback to in-memory storage when JSI is not available (remote debugger)
+		return new MemoryStorage();
+	}
+};
+
+export const storage: StorageLike = createStorage();
 
 // Storage utilities
 export const storageKeys = {
