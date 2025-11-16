@@ -36,6 +36,9 @@ export const storageKeys = {
   USER_PREFERENCES: 'user_preferences',
   CACHE_TIMESTAMP: 'cache_timestamp',
   OFFLINE_DATA: 'offline_data',
+  MOBILE_API_TOKEN: 'mobile_api_token',
+  MOBILE_API_TOKEN_EXPIRES_AT: 'mobile_api_token_expires_at',
+  MOBILE_API_DEVICE_ID: 'mobile_api_device_id',
 } as const;
 
 // Helper functions for storage operations

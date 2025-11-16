@@ -1,5 +1,13 @@
 import React from 'react';
-import { ScrollView, RefreshControl, View, Text, TouchableOpacity } from 'react-native';
+import {
+  ScrollView,
+  RefreshControl,
+  View,
+  Text,
+  TouchableOpacity,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,7 +17,7 @@ import { Loading } from '../components/Loading';
 import { ErrorView } from '../components/ErrorView';
 import { useLatestVideo } from '../hooks/useVideos';
 import { useLatestTweet } from '../hooks/useTweets';
-import { useLatestNews } from '../hooks/useNews';
+import { useAllNews } from '../hooks/useNews';
 import { Video, Tweet, News } from '../types';
 import { useTheme } from '../App';
 import styles from './HomeScreen.styles';
@@ -37,11 +45,16 @@ const HomeScreen: React.FC = () => {
   } = useLatestTweet();
 
   const {
-    data: latestNews,
+    data: newsPages,
     isLoading: newsLoading,
     error: newsError,
     refetch: refetchNews,
-  } = useLatestNews();
+    fetchNextPage: fetchNextNews,
+    hasNextPage: hasNextNews,
+    isFetchingNextPage: isFetchingNextNews,
+  } = useAllNews(10);
+
+  const newsItems = newsPages?.pages.flatMap(page => page.items) || [];
 
   const handleRefresh = () => {
     refetchVideo();
@@ -58,17 +71,17 @@ const HomeScreen: React.FC = () => {
   };
 
   const handleNewsPress = (news: News) => {
-    navigation.navigate('MainTabs', { screen: 'RSS' });
+    navigation.navigate('ArticleDetails', { articleId: news.id, initialArticle: news });
   };
 
   const isLoading = videoLoading || tweetLoading || newsLoading;
   const hasError = videoError || tweetError || newsError;
 
-  if (isLoading && !latestVideo && !latestTweet && !latestNews) {
+  if (isLoading && !latestVideo && !latestTweet && newsItems.length === 0) {
     return <Loading message="Loading latest content..." fullScreen />;
   }
 
-  if (hasError && !latestVideo && !latestTweet && !latestNews) {
+  if (hasError && !latestVideo && !latestTweet && newsItems.length === 0) {
     return (
       <ErrorView
         message="Failed to load content. Please try again."
@@ -77,6 +90,20 @@ const HomeScreen: React.FC = () => {
       />
     );
   }
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (!hasNextNews || isFetchingNextNews) {
+      return;
+    }
+
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const distanceFromBottom =
+      contentSize.height - (layoutMeasurement.height + contentOffset.y);
+
+    if (distanceFromBottom < 200) {
+      fetchNextNews();
+    }
+  };
 
   return (
     <SafeAreaView edges={['left','right','bottom']} style={[styles.container, { backgroundColor: colors.background }]}> 
@@ -92,6 +119,8 @@ const HomeScreen: React.FC = () => {
           />
         }
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={handleScroll}
       >
         {/* Header
         <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
@@ -131,7 +160,7 @@ const HomeScreen: React.FC = () => {
           </View>
 
           {/* Latest Tweet Section */}
-          <View style={styles.section}>
+           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Latest Tweet</Text>
               <TouchableOpacity
@@ -158,7 +187,7 @@ const HomeScreen: React.FC = () => {
             ) : null}
           </View>
 
-          {/* Latest News Section */}
+          {/* Latest News Section (infinite scroll) */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Latest News</Text>
@@ -170,12 +199,13 @@ const HomeScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
 
-            {newsLoading && !latestNews ? (
+            {newsLoading && newsItems.length === 0 ? (
               <Loading message="Loading latest news..." />
-            ) : newsError && !latestNews ? (
+            ) : newsError && newsItems.length === 0 ? (
               <ErrorView message="Failed to load news" onRetry={refetchNews} />
-            ) : latestNews ? (
-              latestNews.data.map((news) => (
+            ) : newsItems.length > 0 ? (
+              <>
+                {newsItems.map((news) => (
                 <TouchableOpacity
                   key={news.id}
                   onPress={() => handleNewsPress(news)}
@@ -183,9 +213,21 @@ const HomeScreen: React.FC = () => {
                   activeOpacity={0.8}
                 >
                   <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{news.title}</Text>
-                  <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>{news.summary}</Text>
+                  <Text
+                    style={[styles.cardSubtitle, { color: colors.textSecondary }]}
+                    numberOfLines={3}
+                    ellipsizeMode="tail"
+                  >
+                    {news.summary}
+                  </Text>
                 </TouchableOpacity>
-              ))
+                ))}
+                {isFetchingNextNews && (
+                  <View style={{ marginTop: 12 }}>
+                    <Loading message="Loading more news..." />
+                  </View>
+                )}
+              </>
             ) : null}
           </View>
         </View>

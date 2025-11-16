@@ -1,6 +1,8 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { Video, Tweet, News, ApiResponse, PaginatedResponse } from '../types';
+import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import { Platform } from 'react-native';
+import { Video, Tweet, News, ApiResponse, PaginatedResponse, NewsFeedPage } from '../types';
 import { mockVideos, mockTweets, mockNews } from '../mocks';
+import { storage, storageKeys } from '../store/storage';
 
 // Determine mock mode from Expo public env var; default to real API
 const useMockData = (process.env.EXPO_PUBLIC_USE_MOCK === '1' || process.env.EXPO_PUBLIC_USE_MOCK === 'true') ?? false;
@@ -30,6 +32,224 @@ const simulateNetworkDelay = (): Promise<void> => {
 const simulateError = (): boolean => {
   return false;
 };
+
+type FeedItemResponse = {
+  id: string;
+  title: string;
+  summary: string;
+  image_url?: string | null;
+  published_at: string;
+  tags?: string[];
+  tickers?: string[];
+};
+
+type FeedResponse = {
+  items: FeedItemResponse[];
+  pagination?: {
+    next_cursor?: string | null;
+    has_more?: boolean;
+  };
+};
+
+type ArticleTagResponse = {
+  id?: number;
+  name?: string;
+  slug?: string;
+};
+
+type ArticleTickerResponse = {
+  id?: string;
+  symbol: string;
+  name?: string;
+  slug?: string;
+  image_url?: string | null;
+};
+
+type ArticleResponse = {
+  id: string;
+  title: string;
+  summary?: string;
+  content?: string;
+  image_url?: string | null;
+  published_at: string;
+  source?: string;
+  source_url?: string;
+  // Backend may return tags both as objects and as plain strings; support both
+  tags?: (ArticleTagResponse | string)[];
+  // Same for tickers: either objects or plain strings (symbols)
+  tickers?: (ArticleTickerResponse | string)[];
+};
+
+type FeedRequestParams = {
+  cursor?: string | null;
+  limit?: number;
+  tags?: string[];
+  tickers?: string[];
+};
+
+const APP_VERSION = process.env.EXPO_PUBLIC_APP_VERSION || '1.0.0';
+const PLATFORM = Platform.OS === 'ios' ? 'ios' : Platform.OS === 'android' ? 'android' : 'web';
+const TOKEN_EXPIRY_BUFFER_MS = 5 * 60 * 1000;
+const DEFAULT_SOURCE = 'Crypto News Feed';
+
+const slugify = (value?: string) => {
+  if (!value) return undefined;
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-');
+};
+
+const generateUUID = (): string => {
+  if (typeof globalThis !== 'undefined' && typeof globalThis.crypto?.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID();
+  }
+  const template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
+  return template.replace(/[xy]/g, c => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
+type AnonymousAuthResponse = {
+  token_type: string;
+  access_token: string;
+  expires_in: number;
+};
+
+class MobileApiAuthManager {
+  private accessToken: string | null;
+  private expiresAt: number | null;
+  private pendingAuth?: Promise<string>;
+
+  constructor() {
+    this.accessToken = storage.getString(storageKeys.MOBILE_API_TOKEN) || null;
+    const expiresValue = storage.getString(storageKeys.MOBILE_API_TOKEN_EXPIRES_AT);
+    this.expiresAt = expiresValue ? Number(expiresValue) : null;
+  }
+
+  async getAccessToken(): Promise<string> {
+    if (useMockData) {
+      return '';
+    }
+
+    if (this.isTokenValid()) {
+      return this.accessToken as string;
+    }
+
+    return this.requestToken();
+  }
+
+  async forceRefreshToken(): Promise<string> {
+    return this.requestToken(true);
+  }
+
+  clearToken() {
+    this.accessToken = null;
+    this.expiresAt = null;
+    storage.delete(storageKeys.MOBILE_API_TOKEN);
+    storage.delete(storageKeys.MOBILE_API_TOKEN_EXPIRES_AT);
+  }
+
+  private isTokenValid(): boolean {
+    if (!this.accessToken || !this.expiresAt) {
+      return false;
+    }
+    const now = Date.now();
+    return now + TOKEN_EXPIRY_BUFFER_MS < this.expiresAt;
+  }
+
+  private async requestToken(force = false): Promise<string> {
+    if (!force && this.pendingAuth) {
+      return this.pendingAuth;
+    }
+
+    this.pendingAuth = this.performAuth().finally(() => {
+      this.pendingAuth = undefined;
+    });
+
+    return this.pendingAuth;
+  }
+
+  private async performAuth(): Promise<string> {
+    const deviceId = this.getDeviceId();
+    const payload = {
+      device_id: deviceId,
+      app_version: APP_VERSION,
+      platform: PLATFORM,
+    };
+
+    const response: AxiosResponse<AnonymousAuthResponse> = await axios.post(
+      `${resolvedBaseUrl}/auth/anonymous`,
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000,
+      }
+    );
+
+    const { access_token, expires_in } = response.data;
+    const expiresAt = Date.now() + (expires_in ?? 86400) * 1000;
+
+    this.accessToken = access_token;
+    this.expiresAt = expiresAt;
+
+    storage.set(storageKeys.MOBILE_API_TOKEN, access_token);
+    storage.set(storageKeys.MOBILE_API_TOKEN_EXPIRES_AT, expiresAt.toString());
+
+    return access_token;
+  }
+
+  private getDeviceId(): string {
+    const existing = storage.getString(storageKeys.MOBILE_API_DEVICE_ID);
+    if (existing) {
+      return existing;
+    }
+    const newDeviceId = generateUUID();
+    storage.set(storageKeys.MOBILE_API_DEVICE_ID, newDeviceId);
+    return newDeviceId;
+  }
+}
+
+const authManager = new MobileApiAuthManager();
+
+apiClient.interceptors.request.use(
+  async (config: InternalAxiosRequestConfig) => {
+    if (useMockData) {
+      return config;
+    }
+
+    const token = await authManager.getAccessToken();
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  },
+);
+
+apiClient.interceptors.response.use(
+  response => response,
+  async error => {
+    if (useMockData) {
+      return Promise.reject(error);
+    }
+
+    const status = error?.response?.status;
+    const originalRequest = error?.config as (InternalAxiosRequestConfig & { _retry?: boolean });
+
+    if (status === 401 && originalRequest && !originalRequest._retry) {
+      originalRequest._retry = true;
+      authManager.clearToken();
+      await authManager.forceRefreshToken();
+      return apiClient(originalRequest);
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 // API Service Class
 class ApiService {
@@ -120,142 +340,193 @@ class ApiService {
   }
 
   // News endpoints
-  async getLatestNews(page: number = 1, limit: number = 5): Promise<PaginatedResponse<News>> {
-    if (useMockData) {
-      await simulateNetworkDelay();
-      
-      if (simulateError()) {
-        throw new Error('Failed to fetch latest news');
-      }
-      
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedNews = mockNews.slice(startIndex, endIndex);
-      
-      return {
-        data: paginatedNews,
-        page,
-        limit,
-        total: mockNews.length,
-        hasMore: endIndex < mockNews.length,
-      };
-    }
-
-    // Real API: root returns { message, timestamp }
-    const response: AxiosResponse<{ message: string; timestamp: string }> = await apiClient.get('/');
-    const statusNews: News = {
-      id: `status-${response.data.timestamp}`,
-      title: response.data.message,
-      image: '',
-      summary: response.data.message,
-      content: response.data.message,
-      publishedAt: response.data.timestamp,
-      sourceUrl: resolvedBaseUrl,
-      source: 'Crypto App Admin API',
-      category: 'status',
-    };
-
-    return {
-      data: [statusNews],
-      page: 1,
-      limit,
-      total: 1,
-      hasMore: false,
-    };
+  async getLatestNews(limit: number = 5): Promise<News[]> {
+    const page = await this.fetchNewsFeed({ limit });
+    return page.items;
   }
 
-  async getAllNews(page: number = 1, limit: number = 20): Promise<PaginatedResponse<News>> {
-    if (useMockData) {
-      await simulateNetworkDelay();
-      
-      if (simulateError()) {
-        throw new Error('Failed to fetch news');
-      }
-      
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedNews = mockNews.slice(startIndex, endIndex);
-      
-      return {
-        data: paginatedNews,
-        page,
-        limit,
-        total: mockNews.length,
-        hasMore: endIndex < mockNews.length,
-      };
-    }
-
-    // Real API: root returns service status; adapt it into one-news list
-    const response: AxiosResponse<{ message: string; timestamp: string }> = await apiClient.get('/');
-    const statusNews: News = {
-      id: `status-${response.data.timestamp}`,
-      title: response.data.message,
-      image: '',
-      summary: response.data.message,
-      content: response.data.message,
-      publishedAt: response.data.timestamp,
-      sourceUrl: resolvedBaseUrl,
-      source: 'Crypto App Admin API',
-      category: 'status',
-    };
-
-    return {
-      data: [statusNews],
-      page: 1,
-      limit,
-      total: 1,
-      hasMore: false,
-    };
+  async getAllNews(cursor?: string | null, limit: number = 20): Promise<NewsFeedPage> {
+    return this.fetchNewsFeed({ cursor, limit });
   }
 
-  async searchNews(query: string, page: number = 1, limit: number = 20): Promise<PaginatedResponse<News>> {
-    if (useMockData) {
-      await simulateNetworkDelay();
-      
-      if (simulateError()) {
-        throw new Error('Failed to search news');
-      }
-      
-      const filteredNews = mockNews.filter(news => 
-        news.title.toLowerCase().includes(query.toLowerCase()) ||
-        news.summary.toLowerCase().includes(query.toLowerCase()) ||
-        news.content.toLowerCase().includes(query.toLowerCase())
+  async searchNews(query: string, cursor?: string | null, limit: number = 20): Promise<NewsFeedPage> {
+    const page = await this.fetchNewsFeed({ cursor, limit });
+    if (!query) {
+      return page;
+    }
+
+    const normalizedQuery = query.toLowerCase();
+    const filteredItems = page.items.filter(item => {
+      return (
+        item.title.toLowerCase().includes(normalizedQuery) ||
+        item.summary.toLowerCase().includes(normalizedQuery) ||
+        item.content.toLowerCase().includes(normalizedQuery)
       );
-      
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedNews = filteredNews.slice(startIndex, endIndex);
-      
-      return {
-        data: paginatedNews,
-        page,
-        limit,
-        total: filteredNews.length,
-        hasMore: endIndex < filteredNews.length,
-      };
-    }
-
-    // Real API: search over the status payload
-    const response: AxiosResponse<{ message: string; timestamp: string }> = await apiClient.get('/');
-    const matches = response.data.message.toLowerCase().includes(query.toLowerCase());
-    const statusNews: News = {
-      id: `status-${response.data.timestamp}`,
-      title: response.data.message,
-      image: '',
-      summary: response.data.message,
-      content: response.data.message,
-      publishedAt: response.data.timestamp,
-      sourceUrl: resolvedBaseUrl,
-      source: 'Crypto App Admin API',
-      category: 'status',
-    };
+    });
 
     return {
-      data: matches && query.length > 0 ? [statusNews] : [],
-      page: 1,
-      limit,
-      total: matches && query.length > 0 ? 1 : 0,
-      hasMore: false,
+      ...page,
+      items: filteredItems,
+    };
+  }
+
+  async getArticleById(id: string): Promise<News> {
+    if (useMockData) {
+      await simulateNetworkDelay();
+      const article = mockNews.find(item => item.id === id);
+      if (!article) {
+        throw new Error('Article not found');
+      }
+      return article;
+    }
+
+    const response: AxiosResponse<ArticleResponse> = await apiClient.get(`/mapi/v1/articles/${id}`);
+    return this.mapArticleResponse(response.data);
+  }
+
+  private async fetchNewsFeed(params: FeedRequestParams = {}): Promise<NewsFeedPage> {
+    if (useMockData) {
+      return this.getMockFeed(params);
+    }
+
+    const response: AxiosResponse<FeedResponse> = await apiClient.get('/mapi/v1/feed', {
+      params: this.buildFeedQuery(params),
+    });
+
+    return this.mapFeedResponse(response.data, params.cursor || null);
+  }
+
+  private async getMockFeed(params: FeedRequestParams): Promise<NewsFeedPage> {
+    await simulateNetworkDelay();
+
+    if (simulateError()) {
+      throw new Error('Failed to fetch mock news feed');
+    }
+
+    const limit = params.limit ?? 20;
+    const offset = params.cursor ? Number(params.cursor) : 0;
+    const safeOffset = Number.isFinite(offset) ? offset : 0;
+    const items = mockNews.slice(safeOffset, safeOffset + limit);
+    const nextCursor = safeOffset + limit < mockNews.length ? String(safeOffset + limit) : null;
+
+    return {
+      cursor: params.cursor || null,
+      nextCursor,
+      hasMore: Boolean(nextCursor),
+      items,
+    };
+  }
+
+  private buildFeedQuery(params: FeedRequestParams) {
+    const query: Record<string, string> = {};
+    if (params.cursor) {
+      query.cursor = params.cursor;
+    }
+    if (params.limit) {
+      query.limit = String(params.limit);
+    }
+    if (params.tags?.length) {
+      query.tags = params.tags.join(',');
+    }
+    if (params.tickers?.length) {
+      query.tickers = params.tickers.join(',');
+    }
+    return query;
+  }
+
+  private mapFeedResponse(response: FeedResponse, cursor: string | null): NewsFeedPage {
+    const pagination = response.pagination ?? {};
+    const items = response.items ?? [];
+    return {
+      cursor,
+      nextCursor: pagination.next_cursor ?? null,
+      hasMore: Boolean(pagination.has_more),
+      items: items.map(item => this.mapFeedItem(item)),
+    };
+  }
+
+  private mapFeedItem(item: FeedItemResponse): News {
+    const tags = item.tags?.map(tag => ({
+      name: tag,
+      slug: slugify(tag),
+    })) ?? [];
+
+    const tickers = item.tickers?.map(symbol => ({
+      symbol,
+      name: symbol,
+      slug: slugify(symbol),
+    })) ?? [];
+
+    return {
+      id: item.id,
+      title: item.title,
+      summary: item.summary,
+      content: item.summary,
+      imageUrl: item.image_url ?? undefined,
+      publishedAt: item.published_at,
+      source: DEFAULT_SOURCE,
+      category: tags[0]?.name,
+      tags,
+      tickers,
+    };
+  }
+
+  private mapArticleResponse(article: ArticleResponse): News {
+    const rawTags = article.tags ?? [];
+    const rawTickers = article.tickers ?? [];
+
+    const tags = rawTags.map((tag, index) => {
+      if (typeof tag === 'string') {
+        const name = tag.trim();
+        return {
+          id: index,
+          name,
+          slug: slugify(name),
+        };
+      }
+
+      const baseName = tag.name || tag.slug || `Tag ${index + 1}`;
+      return {
+        id: tag.id ?? index,
+        name: baseName,
+        slug: tag.slug ?? slugify(baseName),
+      };
+    });
+
+    const tickers = rawTickers.map((ticker, index) => {
+      if (typeof ticker === 'string') {
+        const symbol = ticker.trim();
+        return {
+          id: index.toString(),
+          symbol,
+          name: symbol,
+          slug: slugify(symbol),
+          imageUrl: undefined,
+        };
+      }
+
+      const baseSymbol = ticker.symbol || ticker.name || `TICKER_${index + 1}`;
+      return {
+        id: ticker.id ?? index.toString(),
+        symbol: baseSymbol,
+        name: ticker.name ?? baseSymbol,
+        slug: ticker.slug ?? slugify(baseSymbol),
+        imageUrl: ticker.image_url,
+      };
+    });
+
+    return {
+      id: article.id,
+      title: article.title,
+      summary: article.summary || article.content || '',
+      content: article.content || article.summary || '',
+      imageUrl: article.image_url ?? undefined,
+      publishedAt: article.published_at,
+      source: article.source || DEFAULT_SOURCE,
+      sourceUrl: article.source_url,
+      category: tags[0]?.name,
+      tags,
+      tickers,
     };
   }
 }

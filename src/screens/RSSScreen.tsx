@@ -2,20 +2,26 @@ import React, { useState } from 'react';
 import { FlatList, RefreshControl, View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { Loading, ListSkeleton } from '../components/Loading';
+import { ListSkeleton } from '../components/Loading';
 import { ErrorView } from '../components/ErrorView';
 import { useAllNews, useSearchNews } from '../hooks/useNews';
 import { News } from '../types';
 import { debounce } from '../utils/format';
 import { useTheme } from '../App';
 import styles from './RSSScreen.styles';
+import { RootStackParamList } from '../navigation/types';
+
+type RSSScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const RSSScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const { colors } = useTheme();
   const headerHeight = useHeaderHeight();
+  const navigation = useNavigation<RSSScreenNavigationProp>();
 
   const {
     data: allNewsData,
@@ -67,18 +73,30 @@ const RSSScreen: React.FC = () => {
   };
 
   const handleNewsPress = (news: News) => {
-    // News press handled in NewsCard component (expand/collapse)
+    navigation.navigate('ArticleDetails', { articleId: news.id, initialArticle: news });
   };
 
   const renderNews = ({ item }: { item: News }) => (
-    <View style={[styles.newsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <TouchableOpacity
+      onPress={() => handleNewsPress(item)}
+      activeOpacity={0.85}
+      style={[styles.newsCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+    >
       <Text style={[styles.newsTitle, { color: colors.textPrimary }]}>{item.title}</Text>
-      <Text style={[styles.newsSummary, { color: colors.textSecondary }]}>{item.summary}</Text>
+      <Text
+        style={[styles.newsSummary, { color: colors.textSecondary }]}
+        numberOfLines={3}
+        ellipsizeMode="tail"
+      >
+        {item.summary}
+      </Text>
       <View style={styles.newsMeta}>
-        <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{item.source}</Text>
+        <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+          {item.source || 'Crypto News Feed'}
+        </Text>
         <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{new Date(item.publishedAt).toLocaleDateString()}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   const renderFooter = () => {
@@ -119,7 +137,7 @@ const RSSScreen: React.FC = () => {
   };
 
   const newsData = isSearching ? searchData : allNewsData;
-  const news = newsData?.pages.flatMap(page => page.data) || [];
+  const news = newsData?.pages.flatMap(page => page.items) || [];
   const isLoading = isSearching ? searchLoading : allNewsLoading;
 
   return (

@@ -72,16 +72,35 @@ export const generateNews = (count: number = 30): News[] => {
     const source = sources[i % sources.length];
     const publishedAt = new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString();
     
+    const category = ['Bitcoin', 'Ethereum', 'DeFi', 'NFTs', 'Regulation', 'Technology'][i % 6];
+    const tickerSymbol = ['BTC', 'ETH', 'SOL', 'ADA', 'XRP', 'MATIC'][i % 6];
+
     news.push({
       id: `news_${i + 1}`,
       title,
-      image: `https://picsum.photos/400/250?random=${i + 200}`,
+      imageUrl: `https://picsum.photos/400/250?random=${i + 200}`,
       summary,
       content,
       publishedAt,
       sourceUrl: `https://example.com/news/${i + 1}`,
       source,
-      category: ['Bitcoin', 'Ethereum', 'DeFi', 'NFTs', 'Regulation', 'Technology'][i % 6],
+      category,
+      tags: [
+        {
+          id: i + 1,
+          name: category,
+          slug: category.toLowerCase(),
+        },
+      ],
+      tickers: [
+        {
+          id: `ticker_${i + 1}`,
+          symbol: tickerSymbol,
+          name: category,
+          slug: category.toLowerCase(),
+          imageUrl: `https://picsum.photos/64/64?random=${i + 400}`,
+        },
+      ],
     });
   }
   

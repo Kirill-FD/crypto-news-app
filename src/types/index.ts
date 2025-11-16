@@ -19,16 +19,39 @@ export interface Tweet {
   replies?: number;
 }
 
+export interface NewsTag {
+  id?: string | number;
+  name: string;
+  slug?: string;
+}
+
+export interface NewsTicker {
+  id?: string;
+  symbol: string;
+  name?: string;
+  slug?: string;
+  imageUrl?: string | null;
+}
+
 export interface News {
   id: string;
   title: string;
-  image: string;
   summary: string;
   content: string;
   publishedAt: string;
-  sourceUrl: string;
-  source: string;
+  imageUrl?: string | null;
+  source?: string;
+  sourceUrl?: string;
   category?: string;
+  tags?: NewsTag[];
+  tickers?: NewsTicker[];
+}
+
+export interface NewsFeedPage {
+  cursor?: string | null;
+  nextCursor?: string | null;
+  hasMore: boolean;
+  items: News[];
 }
 
 export interface User {

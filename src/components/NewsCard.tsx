@@ -23,6 +23,10 @@ export const NewsCard: React.FC<NewsCardProps> = ({
   maxSummaryLength = 150,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const placeholderImage = 'https://placehold.co/600x400?text=Crypto+News';
+  const imageUri = news.imageUrl || placeholderImage;
+  const sourceLabel = news.source || 'Crypto News Feed';
+  const categoryLabel = news.category || news.tags?.[0]?.name;
 
   const handlePress = () => {
     if (expandable) {
@@ -41,7 +45,7 @@ export const NewsCard: React.FC<NewsCardProps> = ({
       activeOpacity={0.8}
     >
       <SmartImage
-        uri={news.image}
+        uri={imageUri}
         className="w-full h-48"
         resizeMode="cover"
       />
@@ -76,13 +80,13 @@ export const NewsCard: React.FC<NewsCardProps> = ({
         <View className="flex-row items-center justify-between mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
           <View className="flex-row items-center">
             <Text className="text-gray-500 dark:text-gray-400 text-sm">
-              {news.source}
+              {sourceLabel}
             </Text>
-            {news.category && (
+            {(categoryLabel) && (
               <>
                 <Text className="text-gray-400 dark:text-gray-500 mx-2">•</Text>
                 <Text className="text-gray-500 dark:text-gray-400 text-sm">
-                  {news.category}
+                  {categoryLabel}
                 </Text>
               </>
             )}
@@ -106,6 +110,10 @@ export const CompactNewsCard: React.FC<CompactNewsCardProps> = ({
   news,
   onPress,
 }) => {
+  const placeholderImage = 'https://placehold.co/400x400?text=Crypto+News';
+  const imageUri = news.imageUrl || placeholderImage;
+  const sourceLabel = news.source || 'Crypto News Feed';
+
   return (
     <TouchableOpacity
       onPress={() => onPress?.(news)}
@@ -114,7 +122,7 @@ export const CompactNewsCard: React.FC<CompactNewsCardProps> = ({
     >
       <View className="flex-row">
         <SmartImage
-          uri={news.image}
+          uri={imageUri}
           className="w-24 h-24"
           resizeMode="cover"
         />
@@ -136,7 +144,7 @@ export const CompactNewsCard: React.FC<CompactNewsCardProps> = ({
           
           <View className="flex-row items-center justify-between">
             <Text className="text-gray-500 dark:text-gray-400 text-xs">
-              {news.source}
+              {sourceLabel}
             </Text>
             <Text className="text-gray-500 dark:text-gray-400 text-xs">
               {formatDate(news.publishedAt)}

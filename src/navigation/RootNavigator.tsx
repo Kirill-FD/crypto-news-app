@@ -11,6 +11,7 @@ import XScreen from '../screens/XScreen';
 import YouTubeListScreen from '../screens/YouTubeListScreen';
 import YouTubePlayerScreen from '../screens/YouTubePlayerScreen';
 import RSSScreen from '../screens/RSSScreen';
+import ArticleDetailScreen from '../screens/ArticleDetailScreen';
 import ThemeToggle from '../components/ThemeToggle';
 import { useTheme } from '../App';
 
@@ -97,7 +98,7 @@ const TabIcon: React.FC<TabIconProps> = ({ icon, color, size }) => {
 };
 
 const RootNavigator: React.FC = () => {
-  const { theme } = useTheme();
+  const { theme, colors } = useTheme();
   const navTheme: Theme = theme === 'dark' ? DarkTheme : DefaultTheme;
   return (
     <SafeAreaProvider>
@@ -121,6 +122,19 @@ const RootNavigator: React.FC = () => {
               headerTitleStyle: {
                 fontWeight: 'bold',
               },
+            }}
+          />
+          <Stack.Screen
+            name="ArticleDetails"
+            component={ArticleDetailScreen}
+            options={{
+              headerShown: true,
+              title: 'Article',
+              headerStyle: {
+                backgroundColor: colors.card,
+              },
+              headerTintColor: colors.textPrimary,
+              headerShadowVisible: false,
             }}
           />
         </Stack.Navigator>
