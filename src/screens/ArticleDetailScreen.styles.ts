@@ -5,11 +5,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingBottom: 24,
+    paddingBottom: 0,
+    margin:0
   },
   image: {
     width: '100%',
-    height: 240,
   },
   body: {
     paddingHorizontal: 16,

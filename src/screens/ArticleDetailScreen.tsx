@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, View, Text } from 'react-native';
+import { ScrollView, View, Text, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp, useRoute } from '@react-navigation/native';
 
@@ -45,6 +45,9 @@ const ArticleDetailScreen: React.FC = () => {
     return null;
   }
 
+  const screenWidth = Dimensions.get('window').width;
+  const imageHeight = screenWidth * 0.625; // Aspect ratio 16:10 (1.6)
+  
   const imageUri = article.imageUrl || 'https://placehold.co/800x500?text=Crypto+News';
   const sourceLabel = article.source || 'Crypto News Feed';
   const rawContent = article.content && article.content.trim().length > 0 ? article.content : article.summary;
@@ -71,12 +74,17 @@ const ArticleDetailScreen: React.FC = () => {
         : [];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView
+    // <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: colors.background }]}>
+    <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <SmartImage uri={imageUri} style={styles.image} resizeMode="cover" />
+        <SmartImage 
+          uri={imageUri} 
+          style={{ ...styles.image, height: imageHeight }} 
+          resizeMode="cover" 
+        />
         <View style={styles.body}>
           <Text style={[styles.title, { color: colors.textPrimary }]}>{article.title}</Text>
           <View style={styles.metaRow}>
