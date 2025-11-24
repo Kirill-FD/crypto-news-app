@@ -1,7 +1,15 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { QueryClient, QueryClientProvider, dehydrate, hydrate } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
+import { MMKV } from 'react-native-mmkv';
 
 import RootNavigator from './navigation/RootNavigator';
 import { getUserPreferences, setUserPreferences, UserPreferences } from './store/storage';
@@ -53,8 +61,52 @@ const queryClient = new QueryClient({
   },
 });
 
+const queryCacheStorage = new MMKV({ id: 'react-query-cache' });
+const QUERY_CACHE_KEY = 'tanstack-query-cache-v1';
+
 const App: React.FC = () => {
   const [theme, setTheme] = useState<ThemeMode>('light');
+
+  const [isQueryCacheReady, setIsQueryCacheReady] = useState(false);
+  const persistTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const cached = queryCacheStorage.getString(QUERY_CACHE_KEY);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        hydrate(queryClient, parsed);
+      } catch (error) {
+        console.warn('Failed to hydrate query cache, clearing stale data', error);
+        queryCacheStorage.delete(QUERY_CACHE_KEY);
+      }
+    }
+
+    const persistCache = () => {
+      if (persistTimeout.current) clearTimeout(persistTimeout.current);
+      persistTimeout.current = setTimeout(() => {
+        try {
+          const dehydrated = dehydrate(queryClient);
+          queryCacheStorage.set(QUERY_CACHE_KEY, JSON.stringify(dehydrated));
+        } catch (error) {
+          console.warn('Failed to persist query cache', error);
+        }
+      }, 250);
+    };
+
+    const unsubscribeQuery = queryClient.getQueryCache().subscribe(persistCache);
+    const unsubscribeMutations = queryClient.getMutationCache().subscribe(persistCache);
+
+    setIsQueryCacheReady(true);
+    persistCache();
+
+    return () => {
+      unsubscribeQuery();
+      unsubscribeMutations();
+      if (persistTimeout.current) clearTimeout(persistTimeout.current);
+    };
+  }, []);
+
 
   useEffect(() => {
     const prefs = getUserPreferences();
@@ -80,6 +132,10 @@ const App: React.FC = () => {
       },
     };
   }, [theme]);
+
+  if (!isQueryCacheReady) {
+    return null;
+  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

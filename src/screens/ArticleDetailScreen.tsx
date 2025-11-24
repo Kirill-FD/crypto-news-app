@@ -1,7 +1,8 @@
 import React from 'react';
-import { ScrollView, View, Text, Dimensions } from 'react-native';
+import { ScrollView, View, Text, Dimensions, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { RouteProp, useRoute } from '@react-navigation/native';
+import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { useTheme } from '../App';
 import { RootStackParamList } from '../navigation/types';
@@ -12,12 +13,11 @@ import { ErrorView } from '../components/ErrorView';
 import { formatDate } from '../utils/format';
 import styles from './ArticleDetailScreen.styles';
 
-type ArticleDetailRouteProp = RouteProp<RootStackParamList, 'ArticleDetails'>;
-
 const ArticleDetailScreen: React.FC = () => {
-  const route = useRoute<ArticleDetailRouteProp>();
+  const route = useRoute();
+  const navigation = useNavigation();
   const { colors } = useTheme();
-  const { articleId } = route.params;
+  const articleId = (route.params as any)?.articleId as string;
 
   const {
     data: article,
@@ -172,6 +172,38 @@ const ArticleDetailScreen: React.FC = () => {
           )}
         </View>
       </ScrollView>
+      
+      {/* Custom Tab Bar */}
+      <View style={[styles.tabBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
+        <TouchableOpacity
+          style={styles.tabItem}
+          onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
+        >
+          <Text style={styles.tabIcon}>🏠</Text>
+          <Text style={[styles.tabLabel, { color: colors.textSecondary }]}>Home</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.tabItem}
+          onPress={() => navigation.navigate('MainTabs', { screen: 'X' })}
+        >
+          <Text style={styles.tabIcon}>🐦</Text>
+          <Text style={[styles.tabLabel, { color: colors.textSecondary }]}>X</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.tabItem}
+          onPress={() => navigation.navigate('MainTabs', { screen: 'YouTube' })}
+        >
+          <Text style={styles.tabIcon}>📺</Text>
+          <Text style={[styles.tabLabel, { color: colors.textSecondary }]}>YouTube</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.tabItem}
+          onPress={() => navigation.navigate('MainTabs', { screen: 'RSS' })}
+        >
+          <Text style={styles.tabIcon}>📰</Text>
+          <Text style={[styles.tabLabel, { color: colors.textSecondary }]}>RSS</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };

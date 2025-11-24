@@ -31,15 +31,15 @@ const MainTabs = () => {
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
+          height: 70,
+          paddingBottom: 2,
+          paddingTop: 2,
         },
         tabBarActiveTintColor: '#3b82f6',
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: '500',
+          fontWeight: '600',
         },
       }}
     >

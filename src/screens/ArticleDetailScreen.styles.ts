@@ -5,8 +5,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingBottom: 0,
-    margin:0
+    paddingBottom: 90,
+    margin: 0,
   },
   image: {
     width: '100%',
@@ -80,6 +80,30 @@ const styles = StyleSheet.create({
   },
   articleContent: {
     marginBottom: 24,
+  },
+  tabBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 70,
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    paddingBottom: 2,
+    paddingTop: 2,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabIcon: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  tabLabel: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
 
