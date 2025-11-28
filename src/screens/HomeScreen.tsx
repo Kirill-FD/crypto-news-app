@@ -15,6 +15,7 @@ import { useHeaderHeight } from '@react-navigation/elements';
 
 import { Loading } from '../components/Loading';
 import { ErrorView } from '../components/ErrorView';
+import { TweetCard } from '../components/TweetCard';
 import { useLatestVideo } from '../hooks/useVideos';
 import { useLatestTweet } from '../hooks/useTweets';
 import { useAllNews } from '../hooks/useNews';
@@ -176,14 +177,9 @@ const HomeScreen: React.FC = () => {
             ) : tweetError && !latestTweet ? (
               <ErrorView message="Failed to load tweet" onRetry={refetchTweet} />
             ) : latestTweet ? (
-              <TouchableOpacity
-                onPress={() => handleTweetPress(latestTweet)}
-                style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{latestTweet.user.name}</Text>
-                <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>{latestTweet.text}</Text>
-              </TouchableOpacity>
+              <View style={{ marginHorizontal: 0, marginVertical: 0, marginBottom: 0, paddingBottom: 0 }}>
+                <TweetCard tweet={latestTweet} onPress={handleTweetPress} />
+              </View>
             ) : null}
           </View>
 

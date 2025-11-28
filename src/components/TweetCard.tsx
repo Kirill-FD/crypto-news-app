@@ -25,7 +25,7 @@ export const TweetCard: React.FC<TweetCardProps> = ({
   // If we have embed HTML, show widget only (it includes all info)
   if (tweet.embedHtml) {
     return (
-      <View style={{ margin: 0, padding: 0, marginVertical: 0, marginHorizontal: 0 }}>
+      <View style={{ margin: 0, padding: 0, marginVertical: 0, marginHorizontal: 0, marginBottom: 0 }}>
         <TweetWidget 
           embedHtml={tweet.embedHtml} 
           tweetUrl={tweet.url}

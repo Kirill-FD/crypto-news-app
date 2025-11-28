@@ -54,6 +54,8 @@ export const TweetWidget: React.FC<TweetWidgetProps> = ({
           body {
             margin: 0;
             padding: 0;
+            padding-bottom: 0 !important;
+            margin-bottom: 0 !important;
             background-color: transparent;
             overflow-x: hidden;
             overflow-y: visible;
@@ -64,10 +66,29 @@ export const TweetWidget: React.FC<TweetWidgetProps> = ({
             width: 100%;
             display: block;
             min-height: 60px;
+            margin: 0;
+            padding: 0;
+            margin-bottom: 0 !important;
+            padding-bottom: 0 !important;
           }
           .twitter-tweet {
             margin: 0 auto !important;
+            margin-bottom: 0 !important;
+            padding-bottom: 0 !important;
             max-width: 100% !important;
+          }
+          blockquote.twitter-tweet {
+            margin-bottom: 0 !important;
+            padding-bottom: 0 !important;
+          }
+          iframe[src*="twitter"], iframe[src*="x.com"] {
+            margin-bottom: 0 !important;
+            padding-bottom: 0 !important;
+            display: block;
+          }
+          .twitter-tweet-rendered {
+            margin-bottom: 0 !important;
+            padding-bottom: 0 !important;
           }
         </style>
       </head>
@@ -80,7 +101,7 @@ export const TweetWidget: React.FC<TweetWidgetProps> = ({
             var fallbackHtml = \`${escapedEmbedHtml}\`;
             var hasFallback = fallbackHtml.length > 0;
             var lastHeight = 0;
-            var HEIGHT_BUFFER = 36;
+            var HEIGHT_BUFFER = 0;
             
             function postHeight(height) {
               if (!height || !window.ReactNativeWebView || !window.ReactNativeWebView.postMessage) {
@@ -285,7 +306,7 @@ export const TweetWidget: React.FC<TweetWidgetProps> = ({
     setTimeout(() => {
       webViewRef.current?.injectJavaScript(`
         (function() {
-          var HEIGHT_BUFFER = 36;
+          var HEIGHT_BUFFER = 0;
           function collect(element, heights) {
             if (!element) return;
             try {
@@ -367,12 +388,13 @@ export const TweetWidget: React.FC<TweetWidgetProps> = ({
     try {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.type === 'height' && data.height > 0) {
-        // Update height only if change is significant (>5px) to prevent jitter
+        // Update height only if change is significant (>2px) to prevent jitter
         const newHeight = data.height;
         setWebViewHeight((prevHeight) => {
-          // Update only if height changed significantly (more than 5px)
+          // Update only if height changed significantly (more than 2px)
           // This prevents constant re-renders and layout shifts
-          if (newHeight > 0 && (prevHeight === 0 || Math.abs(newHeight - prevHeight) > 5)) {
+          // But allow initial height to be set immediately
+          if (newHeight > 0 && (prevHeight === 0 || Math.abs(newHeight - prevHeight) > 2)) {
             return newHeight;
           }
           return prevHeight;
@@ -399,7 +421,7 @@ export const TweetWidget: React.FC<TweetWidgetProps> = ({
         onMessage={handleMessage}
         injectedJavaScript={`
           (function() {
-            var HEIGHT_BUFFER = 36;
+            var HEIGHT_BUFFER = 0;
             function collect(element, heights) {
               if (!element) return;
               try {
@@ -486,6 +508,8 @@ const styles = StyleSheet.create({
     padding: 0,
     marginVertical: 0,
     marginHorizontal: 0,
+    marginBottom: 0,
+    paddingBottom: 0,
     // No overflow hidden - allows each widget to have its natural height
   },
   webView: {

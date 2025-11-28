@@ -1,6 +1,7 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { apiService } from '../services/api';
 import { Tweet, PaginatedResponse } from '../types';
+import { testTweetUrls } from '../constants/testTweetsUrls';
 
 // Query keys
 export const tweetKeys = {
@@ -11,11 +12,15 @@ export const tweetKeys = {
   fromUrls: (urls: string[]) => [...tweetKeys.all, 'urls', ...urls] as const,
 };
 
-// Get latest tweet for home page
+// Get latest tweet for home page - returns first tweet from XScreen list
 export const useLatestTweet = () => {
-  return useQuery({
-    queryKey: tweetKeys.latest(),
-    queryFn: () => apiService.getLatestTweet(),
+  return useQuery<Tweet | null>({
+    queryKey: [...tweetKeys.fromUrls(testTweetUrls), 'first'],
+    queryFn: async () => {
+      const tweets = await apiService.getTweetsByUrls(testTweetUrls);
+      return tweets.length > 0 ? tweets[0] : null;
+    },
+    enabled: testTweetUrls.length > 0,
     staleTime: 3 * 60 * 1000, // 3 minutes
     refetchOnMount: false,
     refetchOnWindowFocus: false,
