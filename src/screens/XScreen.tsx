@@ -3,23 +3,22 @@ import { FlatList, RefreshControl, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 
-import { Loading, ListSkeleton } from '../components/Loading';
+// import { Loading, ListSkeleton } from '../components/Loading';
+import { ListSkeleton } from '../components/Loading';
 import { ErrorView } from '../components/ErrorView';
-import { useTweets } from '../hooks/useTweets';
+// import { useTweets } from '../hooks/useTweets';
+import { TweetCard } from '../components/TweetCard';
+import { useTweetsFromUrls } from '../hooks/useTweets';
 import { useTheme } from '../App';
 import styles from './XScreen.styles';
 import { Tweet } from '../types';
+import { testTweetUrls } from '../constants/testTweetsUrls';
+
+// Memoized TweetCard to prevent re-renders when other widgets update
+const MemoizedTweetCard = React.memo(TweetCard);
 
 const XScreen: React.FC = () => {
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useTweets();
+  const { data, isLoading, error, refetch, isFetching } = useTweetsFromUrls(testTweetUrls);
   const { colors } = useTheme();
   const headerHeight = useHeaderHeight();
 
@@ -27,39 +26,14 @@ const XScreen: React.FC = () => {
     refetch();
   };
 
-  const handleLoadMore = () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  };
-
-  const handleTweetPress = (tweet: Tweet) => {
+  const handleTweetPress = (_tweet: Tweet) => {
     // Tweet press handled in TweetCard component
   };
 
-  const renderTweet = ({ item }: { item: Tweet }) => (
-    <View style={[styles.tweetCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <View style={styles.userInfo}>
-        <Text style={[styles.userName, { color: colors.textPrimary }]}>{item.user.name}</Text>
-        <Text style={{ color: colors.textSecondary, fontSize: 14 }}>@{item.user.handle}</Text>
-      </View>
-      <Text style={[styles.tweetText, { color: colors.textPrimary }]}>{item.text}</Text>
-      <View style={styles.tweetStats}>
-        <Text style={{ color: colors.textSecondary, fontSize: 14 }}>{new Date(item.createdAt).toLocaleDateString()}</Text>
-        {item.likes && (
-          <Text style={{ color: colors.textSecondary, fontSize: 14 }}>❤️ {item.likes}</Text>
-        )}
-        {item.retweets && (
-          <Text style={{ color: colors.textSecondary, fontSize: 14 }}>🔄 {item.retweets}</Text>
-        )}
-      </View>
-    </View>
-  );
-
   const renderFooter = () => {
-    if (isFetchingNextPage) {
-      return <ListSkeleton count={2} />;
-    }
+    // if (isFetchingNextPage) {
+    //   return <ListSkeleton count={2} />;
+    // }
     return null;
   };
 
@@ -86,19 +60,29 @@ const XScreen: React.FC = () => {
     );
   };
 
-  const tweets = data?.pages.flatMap(page => page.data) || [];
+  // const tweets = data?.pages.flatMap(page => page.data) || [];
+
+  const tweets = data || [];
 
   return (
     <SafeAreaView edges={['left','right','bottom']} style={[styles.container, { backgroundColor: colors.background }]}> 
       <FlatList
         data={tweets}
-        renderItem={renderTweet}
+        // renderItem={renderTweet}
+        renderItem={({ item }) => <MemoizedTweetCard tweet={item} onPress={handleTweetPress} />}
         keyExtractor={(item) => item.id}
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} colors={[colors.primary]} tintColor={colors.primary} progressViewOffset={headerHeight} />
+          // <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} colors={[colors.primary]} tintColor={colors.primary} progressViewOffset={headerHeight} />
+          <RefreshControl
+          refreshing={isLoading || isFetching}
+          onRefresh={handleRefresh}
+          colors={[colors.primary]}
+          tintColor={colors.primary}
+          progressViewOffset={headerHeight}
+        />
         }
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
+        // onEndReached={handleLoadMore}
+        // onEndReachedThreshold={0.5}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
         ListHeaderComponent={
@@ -109,8 +93,15 @@ const XScreen: React.FC = () => {
             </Text>
           </View>
         }
-        contentContainerStyle={[styles.listContent, tweets.length === 0 && styles.emptyListContent]}
+        // contentContainerStyle={[styles.listContent, tweets.length === 0 && styles.emptyListContent]}
+        contentContainerStyle={[
+          styles.listContent, 
+          tweets.length === 0 && styles.emptyListContent,
+          { paddingVertical: 0, paddingHorizontal: 0 }
+        ]}
         showsVerticalScrollIndicator={false}
+        ItemSeparatorComponent={() => <View style={{ height: 0 }} />}
+        removeClippedSubviews={false}
       />
     </SafeAreaView>
   );

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Linking } from 'react-native';
 import { SmartImage } from './SmartImage';
+import { TweetWidget } from './TweetWidget';
 import { formatDate, formatLikeCount } from '../utils/format';
 import { Tweet } from '../types';
 
@@ -21,10 +22,25 @@ export const TweetCard: React.FC<TweetCardProps> = ({
     }
   };
 
+  // If we have embed HTML, show widget only (it includes all info)
+  if (tweet.embedHtml) {
+    return (
+      <View style={{ margin: 0, padding: 0, marginVertical: 0, marginHorizontal: 0 }}>
+        <TweetWidget 
+          embedHtml={tweet.embedHtml} 
+          tweetUrl={tweet.url}
+          onLoad={() => console.log('Tweet widget loaded')}
+          onError={(error) => console.warn('Tweet widget error:', error)}
+        />
+      </View>
+    );
+  }
+
+  // Fallback: Show custom tweet card
   return (
     <TouchableOpacity
       onPress={() => onPress?.(tweet)}
-      className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-3"
+      className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4"
       activeOpacity={0.8}
     >
       {/* User info */}
@@ -63,6 +79,36 @@ export const TweetCard: React.FC<TweetCardProps> = ({
       <Text className="text-gray-900 dark:text-gray-100 text-base leading-6 mb-3">
         {tweet.text}
       </Text>
+
+      {tweet.mediaUrl && (
+        <TouchableOpacity
+          onPress={handleExternalLink}
+          activeOpacity={0.9}
+          className="mb-3"
+        >
+          <View className="relative">
+            <SmartImage
+              uri={tweet.mediaUrl}
+              className="w-full h-52 rounded-lg"
+              resizeMode="cover"
+            />
+
+            {tweet.mediaType === 'video' && (
+              <>
+                <View className="absolute inset-0 bg-black/20 rounded-lg" />
+                <View className="absolute inset-0 items-center justify-center">
+                  <View className="bg-black/70 rounded-full p-4">
+                    <Text className="text-white text-2xl">▶️</Text>
+                  </View>
+                </View>
+                <View className="absolute bottom-3 left-3 bg-black/70 px-2 py-1 rounded-full">
+                  <Text className="text-white text-xs">Видео</Text>
+                </View>
+              </>
+            )}
+          </View>
+        </TouchableOpacity>
+      )}
       
       {/* Stats */}
       {showStats && (

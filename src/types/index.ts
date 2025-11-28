@@ -14,9 +14,12 @@ export interface Tweet {
   text: string;
   createdAt: string;
   url: string;
+  mediaUrl?: string;
+  mediaType?: 'image' | 'video';
   likes?: number;
   retweets?: number;
   replies?: number;
+  embedHtml?: string; // HTML код для встроенного виджета Twitter
 }
 
 export interface NewsTag {

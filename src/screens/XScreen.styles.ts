@@ -17,8 +17,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   listContent: {
-    padding: 16,
-  },
+    padding: 0
+    },
   emptyListContent: {
     flexGrow: 1,
   },

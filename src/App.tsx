@@ -61,7 +61,26 @@ const queryClient = new QueryClient({
   },
 });
 
-const queryCacheStorage = new MMKV({ id: 'react-query-cache' });
+// const queryCacheStorage = new MMKV({ id: 'react-query-cache' });
+const createQueryCacheStorage = () => {
+  try {
+    return new MMKV({ id: 'react-query-cache' });
+  } catch (error) {
+    console.warn(
+      '[MMKV] Failed to initialize query cache storage. Falling back to in-memory storage.',
+      error,
+    );
+
+    const map = new Map<string, string>();
+    return {
+      getString: (key: string) => map.get(key),
+      set: (key: string, value: string) => map.set(key, value),
+      delete: (key: string) => map.delete(key),
+    } as Pick<MMKV, 'getString' | 'set' | 'delete'>;
+  }
+};
+
+const queryCacheStorage = createQueryCacheStorage();
 const QUERY_CACHE_KEY = 'tanstack-query-cache-v1';
 
 const App: React.FC = () => {

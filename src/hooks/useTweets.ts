@@ -8,6 +8,7 @@ export const tweetKeys = {
   lists: () => [...tweetKeys.all, 'list'] as const,
   list: (filters: string) => [...tweetKeys.lists(), { filters }] as const,
   latest: () => [...tweetKeys.all, 'latest'] as const,
+  fromUrls: (urls: string[]) => [...tweetKeys.all, 'urls', ...urls] as const,
 };
 
 // Get latest tweet for home page
@@ -31,6 +32,17 @@ export const useTweets = (limit: number = 20) => {
     },
     initialPageParam: 1,
     staleTime: 3 * 60 * 1000, // 3 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useTweetsFromUrls = (urls: string[]) => {
+  return useQuery({
+    queryKey: tweetKeys.fromUrls(urls),
+    queryFn: () => apiService.getTweetsByUrls(urls),
+    enabled: urls.length > 0,
+    staleTime: 3 * 60 * 1000,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
