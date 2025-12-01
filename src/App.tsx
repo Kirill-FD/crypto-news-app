@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider, dehydrate, hydrate } from '@tanstack/
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { MMKV } from 'react-native-mmkv';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import RootNavigator from './navigation/RootNavigator';
@@ -121,9 +122,14 @@ const App: React.FC = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
+        {/* <ThemeProvider>
           <AppContent />
-        </ThemeProvider>
+        </ThemeProvider> */}
+        <LanguageProvider>
+          <ThemeProvider>
+            <AppContent />
+          </ThemeProvider>
+        </LanguageProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
   );

@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useHeaderHeight } from '@react-navigation/elements';
+import { useTranslation } from '../contexts/LanguageContext';
 
 import { Loading } from '../components/Loading';
 import { ErrorView } from '../components/ErrorView';
@@ -30,6 +31,7 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const headerHeight = useHeaderHeight();
 
   const {
@@ -71,13 +73,15 @@ const HomeScreen: React.FC = () => {
   const hasError = tweetError || newsError;
 
   if (isLoading && !latestTweet && newsItems.length === 0) {
-    return <Loading message="Loading latest content..." fullScreen />;
+    // return <Loading message="Loading latest content..." fullScreen />;
+    return <Loading message={t('loadingLatestContent')} fullScreen />;
   }
 
   if (hasError && !latestTweet && newsItems.length === 0) {
     return (
       <ErrorView
-        message="Failed to load content. Please try again."
+        // message="Failed to load content. Please try again."
+        message={t('errorLatestContent')}
         onRetry={handleRefresh}
         fullScreen
       />
@@ -127,12 +131,14 @@ const HomeScreen: React.FC = () => {
           {/* Latest Video Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Latest Video</Text>
+              {/* <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Latest Video</Text> */}
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{t('latestVideo')}</Text>
               <TouchableOpacity
                 onPress={() => navigation.navigate('MainTabs', { screen: 'YouTube' })}
                 style={styles.viewAllButton}
               >
-                <Text style={[styles.viewAllText, { color: colors.primary }]}>View All</Text>
+                {/* <Text style={[styles.viewAllText, { color: colors.primary }]}>View All</Text> */}
+                <Text style={[styles.viewAllText, { color: colors.primary }]}>{t('viewAll')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -147,19 +153,23 @@ const HomeScreen: React.FC = () => {
 
                 <View style={styles.latestVideoBody}>
                   <Text style={[styles.latestVideoTitle, { color: colors.textPrimary }]}>
-                    {heroVideo.title}
+                    {heroVideo.title || ''}
                   </Text>
-                  <Text style={[styles.latestVideoDescription, { color: colors.textSecondary }]}>
-                    {heroVideo.description}
-                  </Text>
-                  <Text style={[styles.latestVideoMeta, { color: colors.textSecondary }]}>
-                    {heroVideo.duration} • {heroVideo.viewCount?.toLocaleString()} views
-                  </Text>
+                  {heroVideo.description && (
+                    <Text style={[styles.latestVideoDescription, { color: colors.textSecondary }]}>
+                      {heroVideo.description}
+                    </Text>
+                  )}
+                  {heroVideo.duration && heroVideo.viewCount && (
+                    <Text style={[styles.latestVideoMeta, { color: colors.textSecondary }]}>
+                      {heroVideo.duration} • {heroVideo.viewCount.toLocaleString()} {t('views')}
+                    </Text>
+                  )}
                 </View>
               </View>
             ) : (
               <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
-                Featured videos are unavailable right now.
+                {t('featuredUnavailable')}
               </Text>
             )}
           </View>
@@ -167,19 +177,22 @@ const HomeScreen: React.FC = () => {
           {/* Latest Tweet Section */}
            <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Latest Tweet</Text>
+              {/* <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Latest Tweet</Text> */}
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{t('latestTweet')}</Text>
               <TouchableOpacity
                 onPress={() => navigation.navigate('MainTabs', { screen: 'X' })}
                 style={styles.viewAllButton}
               >
-                <Text style={[styles.viewAllText, { color: colors.primary }]}>View All</Text>
+                <Text style={[styles.viewAllText, { color: colors.primary }]}>{t('viewAll')}</Text>
               </TouchableOpacity>
             </View>
 
             {tweetLoading && !latestTweet ? (
-              <Loading message="Loading latest tweet..." />
+              // <Loading message="Loading latest tweet..." />
+              <Loading message={t('loadingLatestTweet')} />
             ) : tweetError && !latestTweet ? (
-              <ErrorView message="Failed to load tweet" onRetry={refetchTweet} />
+              // <ErrorView message="Failed to load tweet" onRetry={refetchTweet} />
+              <ErrorView message={t('errorLatestTweet')} onRetry={refetchTweet} />
             ) : latestTweet ? (
               <View style={{ marginHorizontal: 0, marginVertical: 0, marginBottom: 0, paddingBottom: 0 }}>
                 <TweetCard tweet={latestTweet} onPress={handleTweetPress} />
@@ -190,19 +203,23 @@ const HomeScreen: React.FC = () => {
           {/* Latest News Section (infinite scroll) */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Latest News</Text>
+              {/* <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Latest News</Text> */}
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{t('latestNews')}</Text>
               <TouchableOpacity
                 onPress={() => navigation.navigate('MainTabs', { screen: 'RSS' })}
                 style={styles.viewAllButton}
               >
-                <Text style={[styles.viewAllText, { color: colors.primary }]}>View All</Text>
+                {/* <Text style={[styles.viewAllText, { color: colors.primary }]}>View All</Text> */}
+                <Text style={[styles.viewAllText, { color: colors.primary }]}>{t('viewAll')}</Text>
               </TouchableOpacity>
             </View>
 
             {newsLoading && newsItems.length === 0 ? (
-              <Loading message="Loading latest news..." />
+              // <Loading message="Loading latest news..." />
+              <Loading message={t('loadingLatestNews')} />
             ) : newsError && newsItems.length === 0 ? (
-              <ErrorView message="Failed to load news" onRetry={refetchNews} />
+              // <ErrorView message="Failed to load news" onRetry={refetchNews} />
+              <ErrorView message={t('errorLatestNews')} onRetry={refetchNews} />
             ) : newsItems.length > 0 ? (
               <>
                 {newsItems.map((news) => (
@@ -212,19 +229,23 @@ const HomeScreen: React.FC = () => {
                   style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{news.title}</Text>
-                  <Text
-                    style={[styles.cardSubtitle, { color: colors.textSecondary }]}
-                    numberOfLines={3}
-                    ellipsizeMode="tail"
-                  >
-                    {news.summary}
+                  <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+                    {news.title || ''}
                   </Text>
+                  {news.summary && (
+                    <Text
+                      style={[styles.cardSubtitle, { color: colors.textSecondary }]}
+                      numberOfLines={3}
+                      ellipsizeMode="tail"
+                    >
+                      {news.summary}
+                    </Text>
+                  )}
                 </TouchableOpacity>
                 ))}
                 {isFetchingNextNews && (
                   <View style={{ marginTop: 12 }}>
-                    <Loading message="Loading more news..." />
+                    <Loading message={t('loadingMoreNews')} />
                   </View>
                 )}
               </>

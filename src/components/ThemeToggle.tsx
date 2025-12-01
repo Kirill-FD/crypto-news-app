@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { View, Text, Pressable, Animated, Easing } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
+import { useTranslation } from '../contexts/LanguageContext';
+
 
 interface ThemeToggleProps {
   label?: boolean;
@@ -8,6 +10,7 @@ interface ThemeToggleProps {
 
 const ThemeToggle: React.FC<ThemeToggleProps> = ({ label = false }) => {
   const { theme, setTheme, colors } = useTheme();
+  const { t } = useTranslation();
   const isDark = theme === 'dark';
 
   const anim = useRef(new Animated.Value(isDark ? 1 : 0)).current;
@@ -41,7 +44,8 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ label = false }) => {
     <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 8 }}>
       {label && (
         <Text style={{ color: colors.textSecondary, marginRight: 8 }}>
-          {isDark ? 'Dark' : 'Light'}
+          {/* {isDark ? 'Dark' : 'Light'} */}
+          {isDark ? t('themeDark') : t('themeLight')}
         </Text>
       )}
       <Pressable onPress={onToggle} hitSlop={8} style={{ flexDirection: 'row', alignItems: 'center' }}>

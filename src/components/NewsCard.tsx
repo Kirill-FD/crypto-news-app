@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, LayoutAnimation, Platform, UIManager } fr
 import { SmartImage } from './SmartImage';
 import { formatDate, truncateText } from '../utils/format';
 import { News } from '../types';
+import { useTranslation } from '../contexts/LanguageContext';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -25,7 +26,9 @@ export const NewsCard: React.FC<NewsCardProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const placeholderImage = 'https://placehold.co/600x400?text=Crypto+News';
   const imageUri = news.imageUrl || placeholderImage;
-  const sourceLabel = news.source || 'Crypto News Feed';
+  // const sourceLabel = news.source || 'Crypto News Feed';
+  const { t } = useTranslation();
+  const sourceLabel = news.source || t('sourceFallback');
   const categoryLabel = news.category || news.tags?.[0]?.name;
 
   const handlePress = () => {
@@ -72,7 +75,8 @@ export const NewsCard: React.FC<NewsCardProps> = ({
             activeOpacity={0.8}
           >
             <Text className="text-blue-600 dark:text-blue-400 font-medium">
-              {isExpanded ? 'Show Less' : 'Read More'}
+              {/* {isExpanded ? 'Show Less' : 'Read More'} */}
+              {isExpanded ? t('showLess') : t('readMore')}
             </Text>
           </TouchableOpacity>
         )}
@@ -112,7 +116,9 @@ export const CompactNewsCard: React.FC<CompactNewsCardProps> = ({
 }) => {
   const placeholderImage = 'https://placehold.co/400x400?text=Crypto+News';
   const imageUri = news.imageUrl || placeholderImage;
-  const sourceLabel = news.source || 'Crypto News Feed';
+  // const sourceLabel = news.source || 'Crypto News Feed';
+  const { t } = useTranslation();
+  const sourceLabel = news.source || t('sourceFallback');
 
   return (
     <TouchableOpacity

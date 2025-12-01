@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from '../contexts/LanguageContext';
 
 import { ListSkeleton } from '../components/Loading';
 import { ErrorView } from '../components/ErrorView';
@@ -20,6 +21,7 @@ const RSSScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const headerHeight = useHeaderHeight();
   const navigation = useNavigation<RSSScreenNavigationProp>();
 
@@ -118,7 +120,8 @@ const RSSScreen: React.FC = () => {
     if (error) {
       return (
         <ErrorView
-          message="Failed to load news. Please try again."
+          // message="Failed to load news. Please try again."
+          message={t('errorLatestNews')}
           onRetry={handleRefresh}
         />
       );
@@ -127,9 +130,9 @@ const RSSScreen: React.FC = () => {
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>
-          {isSearching 
-            ? 'No news found matching your search.' 
-            : 'No news available at the moment.'
+        {isSearching
+            ? t('searchEmpty')
+            : t('noNews')
           }
         </Text>
       </View>
@@ -155,20 +158,24 @@ const RSSScreen: React.FC = () => {
         ListEmptyComponent={renderEmpty}
         ListHeaderComponent={
           <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}> 
-            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>RSS News</Text>
+            {/* <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>RSS News</Text> */}
+            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('rssTitle')}</Text>
             <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}> 
-              Latest cryptocurrency news and updates
+              {/* Latest cryptocurrency news and updates */}
+              {t('rssSubtitle')}
             </Text>
 
             {/* Search Bar */}
             <View style={[styles.searchContainer, { backgroundColor: colors.background, borderColor: colors.border }]}> 
               <Text style={[styles.searchIcon, { color: colors.textSecondary }]}>🔍</Text>
               <TextInput
-                placeholder="Search news..."
+                // placeholder="Search news..."
+                placeholder={t('searchPlaceholder')}
+                value={searchQuery}
                 placeholderTextColor={colors.textSecondary}
                 style={[styles.searchInput, { color: colors.textPrimary }]}
                 onChangeText={handleSearchChange}
-                defaultValue={searchQuery}
+                // defaultValue={searchQuery}
               />
               {searchQuery.length > 0 && (
                 <TouchableOpacity

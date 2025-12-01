@@ -3,6 +3,7 @@ import { ScrollView, View, Text, Dimensions, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from '../contexts/LanguageContext';
 
 import { useTheme } from '../contexts/ThemeContext';
 import { RootStackParamList } from '../navigation/types';
@@ -17,6 +18,7 @@ const ArticleDetailScreen: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const articleId = (route.params as any)?.articleId as string;
 
   const {
@@ -28,13 +30,15 @@ const ArticleDetailScreen: React.FC = () => {
   } = useArticle(articleId);
 
   if (isLoading && !article) {
-    return <Loading message="Loading article..." fullScreen />;
+    // return <Loading message="Loading article..." fullScreen />;
+    return <Loading message={t('articleLoading')} fullScreen />;
   }
 
   if (error && !article) {
     return (
       <ErrorView
-        message="Failed to load the article. Please try again."
+        // message="Failed to load the article. Please try again."
+        message={t('articleError')}
         onRetry={refetch}
         fullScreen
       />
@@ -49,7 +53,8 @@ const ArticleDetailScreen: React.FC = () => {
   const imageHeight = screenWidth * 0.625; // Aspect ratio 16:10 (1.6)
   
   const imageUri = article.imageUrl || 'https://placehold.co/800x500?text=Crypto+News';
-  const sourceLabel = article.source || 'Crypto News Feed';
+  // const sourceLabel = article.source || 'Crypto News Feed';
+  const sourceLabel = article.source || t('sourceFallback');
   const rawContent = article.content && article.content.trim().length > 0 ? article.content : article.summary;
   const normalizedContent = rawContent?.replace(/\r\n/g, '\n') ?? '';
   const doubleBreakParagraphs = normalizedContent
@@ -159,7 +164,8 @@ const ArticleDetailScreen: React.FC = () => {
           {error && !isLoading && (
             <View style={styles.errorContainer}>
               <ErrorView
-                message="Some data might be outdated. Tap to retry."
+                // message="Some data might be outdated. Tap to retry."
+                message={t('articleRefreshError')}
                 onRetry={refetch}
               />
             </View>
@@ -167,7 +173,8 @@ const ArticleDetailScreen: React.FC = () => {
 
           {isRefetching && (
             <View style={styles.errorContainer}>
-              <Loading message="Refreshing article..." />
+              {/* <Loading message="Refreshing article..." /> */}
+              <Loading message={t('articleRefreshing')} />
             </View>
           )}
         </View>
@@ -180,28 +187,32 @@ const ArticleDetailScreen: React.FC = () => {
           onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
         >
           <Text style={styles.tabIcon}>🏠</Text>
-          <Text style={[styles.tabLabel, { color: colors.textSecondary }]}>Home</Text>
+          {/* <Text style={[styles.tabLabel, { color: colors.textSecondary }]}>Home</Text> */}
+          <Text style={[styles.tabLabel, { color: colors.textSecondary }]}>{t('tabHome')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.tabItem}
           onPress={() => navigation.navigate('MainTabs', { screen: 'X' })}
         >
           <Text style={styles.tabIcon}>🐦</Text>
-          <Text style={[styles.tabLabel, { color: colors.textSecondary }]}>X</Text>
+          {/* <Text style={[styles.tabLabel, { color: colors.textSecondary }]}>X</Text> */}
+          <Text style={[styles.tabLabel, { color: colors.textSecondary }]}>{t('tabX')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.tabItem}
           onPress={() => navigation.navigate('MainTabs', { screen: 'YouTube' })}
         >
           <Text style={styles.tabIcon}>📺</Text>
-          <Text style={[styles.tabLabel, { color: colors.textSecondary }]}>YouTube</Text>
+          {/* <Text style={[styles.tabLabel, { color: colors.textSecondary }]}>YouTube</Text> */}
+          <Text style={[styles.tabLabel, { color: colors.textSecondary }]}>{t('tabYouTube')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.tabItem}
           onPress={() => navigation.navigate('MainTabs', { screen: 'RSS' })}
         >
           <Text style={styles.tabIcon}>📰</Text>
-          <Text style={[styles.tabLabel, { color: colors.textSecondary }]}>RSS</Text>
+          {/* <Text style={[styles.tabLabel, { color: colors.textSecondary }]}>RSS</Text> */}
+          <Text style={[styles.tabLabel, { color: colors.textSecondary }]}>{t('tabRSS')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

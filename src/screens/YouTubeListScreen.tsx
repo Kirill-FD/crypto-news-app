@@ -7,15 +7,18 @@ import styles from './YouTubeListScreen.styles';
 import { useFeaturedVideos } from '../hooks/useYouTubeVideos';
 import { Loading } from '../components/Loading';
 import YouTubeEmbed from '../components/YouTubeEmbed';
+import { useTranslation } from '../contexts/LanguageContext';
 
 const YouTubeListScreen: React.FC = () => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { featuredVideos, isLoading } = useFeaturedVideos();
 
   const renderFeaturedSection = () => (
     <View style={styles.widgetsContainer}>
       {isLoading ? (
-        <Loading message="Loading videos..." />
+        // <Loading message="Loading videos..." />
+        <Loading message={t('loadingVideos')} />
       ) : (
         featuredVideos.map((video, index) => (
         <View
@@ -40,7 +43,7 @@ const YouTubeListScreen: React.FC = () => {
 
             <View style={styles.widgetMeta}>
               <Text style={[styles.widgetMetaText, { color: colors.textSecondary }]}>
-                {video.duration} • {video.viewCount?.toLocaleString()} views
+                {video.duration} • {video.viewCount?.toLocaleString()} {t('views')}
               </Text>
             </View>
           </View>
@@ -57,10 +60,14 @@ const YouTubeListScreen: React.FC = () => {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}> 
+        {/* <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}> 
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>YouTube</Text>
           <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}> 
-            Crypto videos and tutorials
+            Crypto videos and tutorials */}
+        <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('youtubeTitle')}</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
+            {t('youtubeSubtitle')}
           </Text>
         </View>
         {renderFeaturedSection()}

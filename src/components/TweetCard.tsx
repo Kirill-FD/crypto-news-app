@@ -4,6 +4,7 @@ import { SmartImage } from './SmartImage';
 import { TweetWidget } from './TweetWidget';
 import { formatDate, formatLikeCount } from '../utils/format';
 import { Tweet } from '../types';
+import { useTranslation } from '../contexts/LanguageContext';
 
 interface TweetCardProps {
   tweet: Tweet;
@@ -16,6 +17,8 @@ export const TweetCard: React.FC<TweetCardProps> = ({
   onPress,
   showStats = true,
 }) => {
+  const { t } = useTranslation();
+
   const handleExternalLink = async () => {
     if (await Linking.canOpenURL(tweet.url)) {
       await Linking.openURL(tweet.url);
@@ -102,7 +105,8 @@ export const TweetCard: React.FC<TweetCardProps> = ({
                   </View>
                 </View>
                 <View className="absolute bottom-3 left-3 bg-black/70 px-2 py-1 rounded-full">
-                  <Text className="text-white text-xs">Видео</Text>
+                  {/* <Text className="text-white text-xs">Видео</Text> */}
+                  <Text className="text-white text-xs">{t('videoLabel')}</Text>
                 </View>
               </>
             )}

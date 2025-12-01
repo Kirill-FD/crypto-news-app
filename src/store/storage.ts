@@ -1,11 +1,16 @@
 import { MMKV } from 'react-native-mmkv';
 import { Platform } from 'react-native';
+export type AppLanguage = 'en' | 'es' | 'ru';
 
 type StorageLike = {
-	set: (key: string, value: string) => void;
-	getString: (key: string) => string | undefined;
-	delete: (key: string) => void;
-	clearAll: () => void;
+	// set: (key: string, value: string) => void;
+	// getString: (key: string) => string | undefined;
+	// delete: (key: string) => void;
+	// clearAll: () => void;
+  set: (key: string, value: string) => void;
+  getString: (key: string) => string | undefined;
+  delete: (key: string) => void;
+  clearAll: () => void;
 };
 
 class MemoryStorage implements StorageLike {
@@ -80,6 +85,7 @@ export const clearStorage = (): void => {
 // User preferences interface
 export interface UserPreferences {
   theme: 'light' | 'dark';
+  language: AppLanguage;
   notifications: boolean;
   autoRefresh: boolean;
   refreshInterval: number; // in minutes
@@ -89,6 +95,7 @@ export interface UserPreferences {
 // Default user preferences
 export const defaultUserPreferences: UserPreferences = {
   theme: 'light',
+  language: 'en',
   notifications: true,
   autoRefresh: true,
   refreshInterval: 5,
@@ -97,8 +104,10 @@ export const defaultUserPreferences: UserPreferences = {
 
 // User preferences helpers
 export const getUserPreferences = (): UserPreferences => {
-  const preferences = getStorageItem<UserPreferences>(storageKeys.USER_PREFERENCES);
-  return preferences || defaultUserPreferences;
+  // const preferences = getStorageItem<UserPreferences>(storageKeys.USER_PREFERENCES);
+  const preferences = getStorageItem<UserPreferences>(storageKeys.USER_PREFERENCES) || {};
+  return { ...defaultUserPreferences, ...preferences };
+  // return preferences || defaultUserPreferences;
 };
 
 export const setUserPreferences = (preferences: Partial<UserPreferences>): void => {

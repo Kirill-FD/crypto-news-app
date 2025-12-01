@@ -13,6 +13,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import styles from './XScreen.styles';
 import { Tweet } from '../types';
 import { testTweetUrls } from '../constants/testTweetsUrls';
+import { useTranslation } from '../contexts/LanguageContext';
 
 // Memoized TweetCard to prevent re-renders when other widgets update
 const MemoizedTweetCard = React.memo(TweetCard);
@@ -20,6 +21,7 @@ const MemoizedTweetCard = React.memo(TweetCard);
 const XScreen: React.FC = () => {
   const { data, isLoading, error, refetch, isFetching } = useTweetsFromUrls(testTweetUrls);
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const headerHeight = useHeaderHeight();
 
   const handleRefresh = () => {
@@ -54,7 +56,8 @@ const XScreen: React.FC = () => {
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>
-          No tweets available at the moment.
+          {/* No tweets available at the moment. */}
+          {t('noTweets')}
         </Text>
       </View>
     );
@@ -87,9 +90,12 @@ const XScreen: React.FC = () => {
         ListEmptyComponent={renderEmpty}
         ListHeaderComponent={
           <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}> 
-            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>X (Twitter)</Text>
+            {/* <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>X (Twitter)</Text>
             <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}> 
-              Latest crypto tweets and updates
+              Latest crypto tweets and updates */}
+            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('xTitle')}</Text>
+            <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
+              {t('xSubtitle')}
             </Text>
           </View>
         }

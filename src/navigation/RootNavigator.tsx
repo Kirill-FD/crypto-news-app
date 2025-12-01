@@ -4,6 +4,9 @@ import { NavigationContainer, DefaultTheme, DarkTheme, Theme } from '@react-navi
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import SettingsScreen from '../screens/SettingsScreen';
+import SettingsButton from '../components/SettingsButton';
+import { useTranslation } from '../contexts/LanguageContext';
 
 import { RootStackParamList, MainTabParamList } from './types';
 import HomeScreen from '../screens/HomeScreen';
@@ -19,12 +22,15 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const MainTabs = () => {
   const { colors, theme } = useTheme();
+  const { t } = useTranslation();
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: true,
-        headerTitle: 'Crypto News',
-        headerRight: () => <ThemeToggle />,
+        // headerTitle: 'Crypto News',
+        // headerRight: () => <ThemeToggle />,
+        headerTitle: t('appTitle'),
+        headerRight: () => <SettingsButton />,
         headerStyle: { backgroundColor: colors.card },
         headerTintColor: colors.textPrimary,
         tabBarStyle: {
@@ -46,6 +52,8 @@ const MainTabs = () => {
         name="Home"
         component={HomeScreen}
         options={{
+          title: t('tabHome'),
+          tabBarLabel: t('tabHome'),
           tabBarIcon: ({ color, size }) => (
             <TabIcon icon="🏠" color={color} size={size} />
           ),
@@ -55,6 +63,8 @@ const MainTabs = () => {
         name="X"
         component={XScreen}
         options={{
+          title: t('tabX'),
+          tabBarLabel: t('tabX'),
           tabBarIcon: ({ color, size }) => (
             <TabIcon icon="🐦" color={color} size={size} />
           ),
@@ -64,6 +74,8 @@ const MainTabs = () => {
         name="YouTube"
         component={YouTubeListScreen}
         options={{
+          title: t('tabYouTube'),
+          tabBarLabel: t('tabYouTube'),
           tabBarIcon: ({ color, size }) => (
             <TabIcon icon="📺" color={color} size={size} />
           ),
@@ -73,6 +85,8 @@ const MainTabs = () => {
         name="RSS"
         component={RSSScreen}
         options={{
+          title: t('tabRSS'),
+          tabBarLabel: t('tabRSS'),
           tabBarIcon: ({ color, size }) => (
             <TabIcon icon="📰" color={color} size={size} />
           ),
@@ -97,6 +111,7 @@ const TabIcon: React.FC<TabIconProps> = ({ icon, color, size }) => {
 };
 
 const RootNavigator: React.FC = () => {
+  const { t } = useTranslation();
   const { theme, colors } = useTheme();
   const navTheme: Theme = theme === 'dark' ? DarkTheme : DefaultTheme;
   return (
@@ -113,7 +128,21 @@ const RootNavigator: React.FC = () => {
             component={ArticleDetailScreen}
             options={{
               headerShown: true,
-              title: 'Article',
+              // title: 'Article',
+              title: t('articleTitle'),
+              headerStyle: {
+                backgroundColor: colors.card,
+              },
+              headerTintColor: colors.textPrimary,
+              headerShadowVisible: false,
+            }}
+          />
+          <Stack.Screen
+            name="Settings"
+            component={SettingsScreen}
+            options={{
+              headerShown: true,
+              title: t('settingsTitle'),
               headerStyle: {
                 backgroundColor: colors.card,
               },
