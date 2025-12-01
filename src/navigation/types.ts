@@ -1,8 +1,7 @@
-import { Video, News } from '../types';
+import { News } from '../types';
 
 export type RootStackParamList = {
   MainTabs: { screen?: keyof MainTabParamList };
-  YouTubePlayer: { video: Video };
   ArticleDetails: { articleId: string; initialArticle?: News };
 };
 

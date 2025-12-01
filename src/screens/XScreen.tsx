@@ -9,7 +9,7 @@ import { ErrorView } from '../components/ErrorView';
 // import { useTweets } from '../hooks/useTweets';
 import { TweetCard } from '../components/TweetCard';
 import { useTweetsFromUrls } from '../hooks/useTweets';
-import { useTheme } from '../App';
+import { useTheme } from '../contexts/ThemeContext';
 import styles from './XScreen.styles';
 import { Tweet } from '../types';
 import { testTweetUrls } from '../constants/testTweetsUrls';

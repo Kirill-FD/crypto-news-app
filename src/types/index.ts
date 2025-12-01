@@ -4,7 +4,11 @@ export interface Video {
   thumbnail: string;
   youtubeId: string;
   publishedAt: string;
+  /** Краткое описание видео (используется для превью/виджетов) */
+  description?: string;
+  /** Продолжительность видео в формате mm:ss или hh:mm:ss */
   duration?: string;
+  /** Количество просмотров на YouTube */
   viewCount?: number;
 }
 
@@ -90,6 +94,5 @@ export type StackParamList = {
   Home: undefined;
   X: undefined;
   YouTube: undefined;
-  YouTubePlayer: { video: Video };
   RSS: undefined;
 };

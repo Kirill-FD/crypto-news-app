@@ -2,7 +2,7 @@ import React from 'react';
 import { View, ActivityIndicator, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './Loading.styles';
-import { useTheme } from '../App';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface LoadingProps {
   message?: string;

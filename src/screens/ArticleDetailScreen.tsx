@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { useTheme } from '../App';
+import { useTheme } from '../contexts/ThemeContext';
 import { RootStackParamList } from '../navigation/types';
 import { useArticle } from '../hooks/useNews';
 import { SmartImage } from '../components/SmartImage';

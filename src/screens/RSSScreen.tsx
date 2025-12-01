@@ -10,7 +10,7 @@ import { ErrorView } from '../components/ErrorView';
 import { useAllNews, useSearchNews } from '../hooks/useNews';
 import { News } from '../types';
 import { debounce } from '../utils/format';
-import { useTheme } from '../App';
+import { useTheme } from '../contexts/ThemeContext';
 import styles from './RSSScreen.styles';
 import { RootStackParamList } from '../navigation/types';
 

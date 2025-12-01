@@ -16,13 +16,14 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import { Loading } from '../components/Loading';
 import { ErrorView } from '../components/ErrorView';
 import { TweetCard } from '../components/TweetCard';
-import { useLatestVideo } from '../hooks/useVideos';
 import { useLatestTweet } from '../hooks/useTweets';
 import { useAllNews } from '../hooks/useNews';
-import { Video, Tweet, News } from '../types';
-import { useTheme } from '../App';
+import { Tweet, News } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
 import styles from './HomeScreen.styles';
 import { RootStackParamList } from '../navigation/types';
+import { useFeaturedVideos } from '../hooks/useYouTubeVideos';
+import YouTubeEmbed from '../components/YouTubeEmbed';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -30,13 +31,6 @@ const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const { colors } = useTheme();
   const headerHeight = useHeaderHeight();
-
-  const {
-    data: latestVideo,
-    isLoading: videoLoading,
-    error: videoError,
-    refetch: refetchVideo,
-  } = useLatestVideo();
 
   const {
     data: latestTweet,
@@ -57,14 +51,12 @@ const HomeScreen: React.FC = () => {
 
   const newsItems = newsPages?.pages.flatMap(page => page.items) || [];
 
+  const { featuredVideos } = useFeaturedVideos();
+  const heroVideo = featuredVideos[0];
+
   const handleRefresh = () => {
-    refetchVideo();
     refetchTweet();
     refetchNews();
-  };
-
-  const handleVideoPress = (video: Video) => {
-    navigation.navigate('YouTubePlayer', { video });
   };
 
   const handleTweetPress = (tweet: Tweet) => {
@@ -75,14 +67,14 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('ArticleDetails', { articleId: news.id, initialArticle: news });
   };
 
-  const isLoading = videoLoading || tweetLoading || newsLoading;
-  const hasError = videoError || tweetError || newsError;
+  const isLoading = tweetLoading || newsLoading;
+  const hasError = tweetError || newsError;
 
-  if (isLoading && !latestVideo && !latestTweet && newsItems.length === 0) {
+  if (isLoading && !latestTweet && newsItems.length === 0) {
     return <Loading message="Loading latest content..." fullScreen />;
   }
 
-  if (hasError && !latestVideo && !latestTweet && newsItems.length === 0) {
+  if (hasError && !latestTweet && newsItems.length === 0) {
     return (
       <ErrorView
         message="Failed to load content. Please try again."
@@ -144,20 +136,32 @@ const HomeScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
 
-            {videoLoading && !latestVideo ? (
-              <Loading message="Loading latest video..." />
-            ) : videoError && !latestVideo ? (
-              <ErrorView message="Failed to load video" onRetry={refetchVideo} />
-            ) : latestVideo ? (
-              <TouchableOpacity
-                onPress={() => handleVideoPress(latestVideo)}
-                style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
-                activeOpacity={0.8}
+            {heroVideo ? (
+              <View
+                style={[
+                  styles.latestVideoCard,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                ]}
               >
-                <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{latestVideo.title}</Text>
-                <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>Click to watch</Text>
-              </TouchableOpacity>
-            ) : null}
+                <YouTubeEmbed videoId={heroVideo.youtubeId} />
+
+                <View style={styles.latestVideoBody}>
+                  <Text style={[styles.latestVideoTitle, { color: colors.textPrimary }]}>
+                    {heroVideo.title}
+                  </Text>
+                  <Text style={[styles.latestVideoDescription, { color: colors.textSecondary }]}>
+                    {heroVideo.description}
+                  </Text>
+                  <Text style={[styles.latestVideoMeta, { color: colors.textSecondary }]}>
+                    {heroVideo.duration} • {heroVideo.viewCount?.toLocaleString()} views
+                  </Text>
+                </View>
+              </View>
+            ) : (
+              <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
+                Featured videos are unavailable right now.
+              </Text>
+            )}
           </View>
 
           {/* Latest Tweet Section */}

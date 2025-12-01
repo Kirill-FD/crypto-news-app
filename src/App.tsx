@@ -1,40 +1,11 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider, dehydrate, hydrate } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { MMKV } from 'react-native-mmkv';
 
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import RootNavigator from './navigation/RootNavigator';
-import { getUserPreferences, setUserPreferences, UserPreferences } from './store/storage';
-
-type ThemeMode = 'light' | 'dark';
-interface ThemeContextValue {
-  theme: ThemeMode;
-  setTheme: (mode: ThemeMode) => void;
-  colors: {
-    background: string;
-    card: string;
-    textPrimary: string;
-    textSecondary: string;
-    border: string;
-    primary: string;
-  };
-}
-
-const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
-
-export const useTheme = (): ThemeContextValue => {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
-  return ctx;
-};
 
 // Create a client
 const queryClient = new QueryClient({
@@ -61,8 +32,32 @@ const queryClient = new QueryClient({
   },
 });
 
-// const queryCacheStorage = new MMKV({ id: 'react-query-cache' });
-const createQueryCacheStorage = () => {
+type QueryCacheStorage = Pick<MMKV, 'getString' | 'set' | 'delete'>;
+
+const createInMemoryCacheStorage = (): QueryCacheStorage => {
+  const map = new Map<string, string>();
+  return {
+    getString: (key: string) => map.get(key),
+    set: (key: string, value: string) => {
+      map.set(key, value);
+    },
+    delete: (key: string) => {
+      map.delete(key);
+    },
+  };
+};
+
+const hasTurboModuleSupport =
+  typeof globalThis !== 'undefined' && Boolean((globalThis as any).__turboModuleProxy);
+
+const createQueryCacheStorage = (): QueryCacheStorage => {
+  if (!hasTurboModuleSupport) {
+    console.warn(
+      '[MMKV] TurboModules are disabled; query cache persistence will use in-memory storage.',
+    );
+    return createInMemoryCacheStorage();
+  }
+
   try {
     return new MMKV({ id: 'react-query-cache' });
   } catch (error) {
@@ -70,13 +65,7 @@ const createQueryCacheStorage = () => {
       '[MMKV] Failed to initialize query cache storage. Falling back to in-memory storage.',
       error,
     );
-
-    const map = new Map<string, string>();
-    return {
-      getString: (key: string) => map.get(key),
-      set: (key: string, value: string) => map.set(key, value),
-      delete: (key: string) => map.delete(key),
-    } as Pick<MMKV, 'getString' | 'set' | 'delete'>;
+    return createInMemoryCacheStorage();
   }
 };
 
@@ -84,8 +73,6 @@ const queryCacheStorage = createQueryCacheStorage();
 const QUERY_CACHE_KEY = 'tanstack-query-cache-v1';
 
 const App: React.FC = () => {
-  const [theme, setTheme] = useState<ThemeMode>('light');
-
   const [isQueryCacheReady, setIsQueryCacheReady] = useState(false);
   const persistTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -127,31 +114,6 @@ const App: React.FC = () => {
   }, []);
 
 
-  useEffect(() => {
-    const prefs = getUserPreferences();
-    setTheme(prefs.theme);
-  }, []);
-
-  const value: ThemeContextValue = useMemo(() => {
-    const isDark = theme === 'dark';
-    return {
-      theme,
-      setTheme: (mode: ThemeMode) => {
-        setTheme(mode);
-        const prev: UserPreferences = getUserPreferences();
-        setUserPreferences({ theme: mode });
-      },
-      colors: {
-        background: isDark ? '#0b0f14' : '#f9fafb',
-        card: isDark ? '#111827' : '#ffffff',
-        textPrimary: isDark ? '#f3f4f6' : '#111827',
-        textSecondary: isDark ? '#d1d5db' : '#6b7280',
-        border: isDark ? '#1f2937' : '#e5e7eb',
-        primary: '#3b82f6',
-      },
-    };
-  }, [theme]);
-
   if (!isQueryCacheReady) {
     return null;
   }
@@ -159,12 +121,22 @@ const App: React.FC = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
-        <ThemeContext.Provider value={value}>
-          <RootNavigator />
-          <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
-        </ThemeContext.Provider>
+        <ThemeProvider>
+          <AppContent />
+        </ThemeProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
+  );
+};
+
+const AppContent: React.FC = () => {
+  const { theme } = useTheme();
+
+  return (
+    <>
+      <RootNavigator />
+      <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+    </>
   );
 };
 

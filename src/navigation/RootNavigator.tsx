@@ -9,11 +9,10 @@ import { RootStackParamList, MainTabParamList } from './types';
 import HomeScreen from '../screens/HomeScreen';
 import XScreen from '../screens/XScreen';
 import YouTubeListScreen from '../screens/YouTubeListScreen';
-import YouTubePlayerScreen from '../screens/YouTubePlayerScreen';
 import RSSScreen from '../screens/RSSScreen';
 import ArticleDetailScreen from '../screens/ArticleDetailScreen';
 import ThemeToggle from '../components/ThemeToggle';
-import { useTheme } from '../App';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -109,21 +108,6 @@ const RootNavigator: React.FC = () => {
           }}
         >
           <Stack.Screen name="MainTabs" component={MainTabs} />
-          <Stack.Screen
-            name="YouTubePlayer"
-            component={YouTubePlayerScreen}
-            options={{
-              headerShown: true,
-              title: 'Video Player',
-              headerStyle: {
-                backgroundColor: '#000000',
-              },
-              headerTintColor: '#ffffff',
-              headerTitleStyle: {
-                fontWeight: 'bold',
-              },
-            }}
-          />
           <Stack.Screen
             name="ArticleDetails"
             component={ArticleDetailScreen}

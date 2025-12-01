@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { View, Text, Pressable, Animated, Easing } from 'react-native';
-import { useTheme } from '../App';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ThemeToggleProps {
   label?: boolean;

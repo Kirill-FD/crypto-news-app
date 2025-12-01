@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from './ErrorView.styles';
-import { useTheme } from '../App';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ErrorViewProps {
   message?: string;

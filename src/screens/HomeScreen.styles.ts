@@ -67,6 +67,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
+  latestVideoCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  latestVideoBody: {
+    padding: 16,
+  },
+  latestVideoTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  latestVideoDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 10,
+  },
+  latestVideoMeta: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
 });
 
 export default styles;

@@ -17,7 +17,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   listContent: {
-    padding: 16,
+    paddingHorizontal: 2,
+    paddingVertical: 16,
   },
   emptyListContent: {
     flexGrow: 1,
@@ -31,22 +32,46 @@ const styles = StyleSheet.create({
   emptyText: {
     textAlign: 'center',
   },
-  // videoCard: {
-  //   borderRadius: 8,
-  //   padding: 16,
-  //   marginBottom: 16,
-  //   shadowColor: '#000',
-  //   shadowOffset: { width: 0, height: 1 },
-  //   shadowOpacity: 0.05,
-  //   shadowRadius: 2,
-  //   elevation: 1,
-  //   borderWidth: 1,
-  // },
-  // videoTitle: {
-  //   fontSize: 18,
-  //   fontWeight: '600',
-  //   marginBottom: 8,
-  // },
+  widgetsContainer: {
+    paddingHorizontal: 2,
+    paddingVertical: 20,
+  },
+  widgetsTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  widgetsSubtitle: {
+    fontSize: 14,
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  widgetCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    overflow: 'hidden',
+    marginTop: 16,
+  },
+  widgetBody: {
+    padding: 16,
+  },
+  widgetTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  widgetDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  widgetMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  widgetMetaText: {
+    fontSize: 13,
+  },
 });
 
 export default styles;
