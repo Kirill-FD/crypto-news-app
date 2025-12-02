@@ -44,13 +44,19 @@ jobs:
             echo "❌ iOS folder not found!"
             exit 1
           fi
-          if [ ! -d "ios/crypto-news-app.xcworkspace" ]; then
-            echo "❌ .xcworkspace folder not found!"
+          
+          # Find .xcworkspace file dynamically
+          WORKSPACE=$(find ios -name "*.xcworkspace" -type d | head -n 1)
+          if [ -z "$WORKSPACE" ]; then
+            echo "❌ .xcworkspace file not found!"
+            echo "📁 Contents of ios folder:"
             ls -la ios/
             exit 1
           fi
+          
           echo "✅ iOS project created successfully"
-          echo "📦 Workspace location: ios/crypto-news-app.xcworkspace"
+          echo "📦 Workspace location: $WORKSPACE"
+          echo "📦 Project name: $(basename "$WORKSPACE" .xcworkspace)"
 
       - name: Upload iOS project
         uses: actions/upload-artifact@v4
