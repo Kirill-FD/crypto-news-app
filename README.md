@@ -202,6 +202,43 @@ GET /news/search?q=query    # Search news
 
 ## Building for Production
 
+### iOS Build (.xcworkspace)
+
+**⚠️ Требуется macOS для создания iOS проекта**
+
+> **На Windows?** См. [windows-ios-build-guide.md](./windows-ios-build-guide.md) для альтернативных решений (EAS Build, GitHub Actions и др.)
+
+Для создания iOS проекта в формате `.xcworkspace`:
+
+1. **Создайте нативные iOS файлы:**
+   ```bash
+   npm run prebuild:ios
+   # или
+   npx expo prebuild --platform ios
+   ```
+
+2. **Установите CocoaPods зависимости:**
+   ```bash
+   npm run ios:pod-install
+   # или
+   cd ios && pod install && cd ..
+   ```
+
+3. **Откройте проект в Xcode:**
+   ```bash
+   open ios/crypto-news-app.xcworkspace
+   ```
+   
+   **⚠️ ВАЖНО:** Всегда используйте `.xcworkspace`, а не `.xcodeproj`
+
+4. **Альтернативно, используйте готовый скрипт:**
+   ```bash
+   chmod +x build-ios.sh
+   ./build-ios.sh
+   ```
+
+Подробные инструкции см. в файле [ios-build-instructions.md](./ios-build-instructions.md)
+
 ### Development Build
 ```bash
 # Create development build

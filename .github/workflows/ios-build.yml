@@ -1,0 +1,55 @@
+name: iOS Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+          - development
+          - production
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create iOS project
+        run: npx expo prebuild --platform ios --clean
+
+      - name: Install CocoaPods dependencies
+        run: |
+          cd ios
+          pod install
+          cd ..
+
+      - name: Upload iOS project
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-project-${{ github.run_number }}
+          path: ios/
+          retention-days: 7
+
+      - name: Create archive
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-project-archive-${{ github.run_number }}
+          path: |
+            ios/*.xcworkspace
+            ios/*.xcodeproj
+          retention-days: 7
+
